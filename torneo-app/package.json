@@ -1,0 +1,14 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "vite": "^7.0.7"
+    }
+}
