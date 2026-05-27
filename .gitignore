@@ -1,0 +1,6 @@
+# Diagramas y documentacion (no forman parte del codigo)
+*.drawio
+
+# OS
+.DS_Store
+Thumbs.db
