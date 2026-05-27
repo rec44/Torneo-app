@@ -14,11 +14,11 @@ class Partido extends Model
 
     protected $fillable = [
         'torneo_id',
-        'jugador1_id',
-        'jugador2_id',
-        'ganador_id',
-        'resultado_j1',
-        'resultado_j2',
+        'equipo1_id',
+        'equipo2_id',
+        'ganador_equipo_id',
+        'resultado_e1',
+        'resultado_e2',
         'estado',
         'ronda',
         'programado_en',
@@ -37,18 +37,18 @@ class Partido extends Model
         return $this->belongsTo(Torneo::class, 'torneo_id');
     }
 
-    public function jugador1(): BelongsTo
+    public function equipo1(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'jugador1_id');
+        return $this->belongsTo(Equipo::class, 'equipo1_id');
     }
 
-    public function jugador2(): BelongsTo
+    public function equipo2(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'jugador2_id');
+        return $this->belongsTo(Equipo::class, 'equipo2_id');
     }
 
-    public function ganador(): BelongsTo
+    public function ganadorEquipo(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'ganador_id');
+        return $this->belongsTo(Equipo::class, 'ganador_equipo_id');
     }
 }

@@ -4,6 +4,9 @@ export const torneoService = {
   getAll: (params = {}) =>
     api.get('/torneos', { params }).then(r => r.data),
 
+  getMisTorneos: () =>
+    api.get('/mis-torneos').then(r => r.data),
+
   getById: (id) =>
     api.get(`/torneos/${id}`).then(r => r.data),
 

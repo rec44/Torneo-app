@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Torneo extends Model
@@ -21,6 +20,8 @@ class Torneo extends Model
         'elo_minimo',
         'elo_maximo',
         'max_jugadores',
+        'min_miembros',
+        'max_miembros',
         'fecha_inicio',
         'fecha_fin',
         'formato',
@@ -30,11 +31,13 @@ class Torneo extends Model
     protected function casts(): array
     {
         return [
-            'fecha_inicio' => 'datetime',
-            'fecha_fin'    => 'datetime',
-            'elo_minimo'   => 'integer',
-            'elo_maximo'   => 'integer',
+            'fecha_inicio'  => 'datetime',
+            'fecha_fin'     => 'datetime',
+            'elo_minimo'    => 'integer',
+            'elo_maximo'    => 'integer',
             'max_jugadores' => 'integer',
+            'min_miembros'  => 'integer',
+            'max_miembros'  => 'integer',
         ];
     }
 
@@ -48,11 +51,9 @@ class Torneo extends Model
         return $this->belongsTo(Usuario::class, 'creado_por');
     }
 
-    public function jugadores(): BelongsToMany
+    public function equipos(): HasMany
     {
-        return $this->belongsToMany(Usuario::class, 'torneo_usuarios', 'torneo_id', 'usuario_id')
-            ->withPivot(['semilla', 'elo_al_unirse'])
-            ->withTimestamps();
+        return $this->hasMany(Equipo::class, 'torneo_id');
     }
 
     public function partidos(): HasMany

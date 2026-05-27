@@ -201,6 +201,33 @@ input[type='date']::-webkit-calendar-picker-indicator {
   }
 }
 
+/* ─── Editar: readonly info ────────────────────────────────── */
+
+.editar-readonly-info {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.editar-readonly-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 99px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.editar-readonly-tag--formato {
+  background: var(--code-bg);
+  color: var(--text-h);
+  border-color: var(--border);
+}
+
 /* ─── Actions ──────────────────────────────────────────────── */
 
 .form-actions {

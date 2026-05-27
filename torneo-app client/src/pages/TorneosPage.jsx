@@ -5,11 +5,68 @@ import { useDeportes } from '../hooks/useDeportes'
 import { TorneoCard } from '../components/TorneoCard'
 import './TorneosPage.css'
 
+function paginasVisibles(pagina, ultima) {
+  if (ultima <= 7) return Array.from({ length: ultima }, (_, i) => i + 1)
+  const paginas = new Set([1, ultima, pagina])
+  for (let d = 1; d <= 2; d++) {
+    if (pagina - d >= 1)     paginas.add(pagina - d)
+    if (pagina + d <= ultima) paginas.add(pagina + d)
+  }
+  return [...paginas].sort((a, b) => a - b)
+}
+
+function Paginador({ pagina, ultima, total, onChange }) {
+  const paginas = paginasVisibles(pagina, ultima)
+
+  return (
+    <div className="torneos-paginacion">
+      <button
+        className="btn-pagina btn-pagina--nav"
+        disabled={pagina <= 1}
+        onClick={() => onChange(pagina - 1)}
+        aria-label="Página anterior"
+      >
+        ‹
+      </button>
+
+      {paginas.map((p, i) => {
+        const anterior = paginas[i - 1]
+        const hueco    = anterior && p - anterior > 1
+        return (
+          <span key={p} className="pagina-grupo">
+            {hueco && <span className="pagina-puntos">…</span>}
+            <button
+              className={`btn-pagina ${p === pagina ? 'btn-pagina--activo' : ''}`}
+              onClick={() => onChange(p)}
+              disabled={p === pagina}
+              aria-current={p === pagina ? 'page' : undefined}
+            >
+              {p}
+            </button>
+          </span>
+        )
+      })}
+
+      <button
+        className="btn-pagina btn-pagina--nav"
+        disabled={pagina >= ultima}
+        onClick={() => onChange(pagina + 1)}
+        aria-label="Página siguiente"
+      >
+        ›
+      </button>
+
+      <span className="pagina-info">{total} resultado{total !== 1 ? 's' : ''}</span>
+    </div>
+  )
+}
+
 const ESTADOS = [
-  { value: '', label: 'Todos los estados' },
+  { value: '', label: 'Activos (abierto + en curso)' },
   { value: 'abierto', label: 'Abierto' },
   { value: 'en_curso', label: 'En curso' },
   { value: 'finalizado', label: 'Finalizado' },
+  { value: 'cancelado', label: 'Cancelado' },
 ]
 
 export function TorneosPage() {
@@ -140,34 +197,17 @@ export function TorneosPage() {
         </div>
       )}
 
-      {meta && meta.ultima > 1 && (
-        <div className="torneos-paginacion">
-          <button
-            className="btn-pagina"
-            disabled={meta.pagina <= 1}
-            onClick={() => cargar({
-              ...(filtroEstado && { estado: filtroEstado }),
-              ...(filtroDeporte && { deporte_id: filtroDeporte }),
-              page: meta.pagina - 1,
-            })}
-          >
-            Anterior
-          </button>
-          <span className="pagina-info">
-            Página {meta.pagina} de {meta.ultima}
-          </span>
-          <button
-            className="btn-pagina"
-            disabled={meta.pagina >= meta.ultima}
-            onClick={() => cargar({
-              ...(filtroEstado && { estado: filtroEstado }),
-              ...(filtroDeporte && { deporte_id: filtroDeporte }),
-              page: meta.pagina + 1,
-            })}
-          >
-            Siguiente
-          </button>
-        </div>
+      {meta && meta.ultima >= 1 && (
+        <Paginador
+          pagina={meta.pagina}
+          ultima={meta.ultima}
+          total={meta.total}
+          onChange={(p) => cargar({
+            ...(filtroEstado  && { estado:     filtroEstado }),
+            ...(filtroDeporte && { deporte_id: filtroDeporte }),
+            page: p,
+          })}
+        />
       )}
     </div>
   )

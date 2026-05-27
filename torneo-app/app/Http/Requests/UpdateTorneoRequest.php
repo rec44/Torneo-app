@@ -21,6 +21,8 @@ class UpdateTorneoRequest extends FormRequest
             'elo_minimo'    => 'nullable|integer|min:0',
             'elo_maximo'    => 'nullable|integer|min:0',
             'max_jugadores' => 'sometimes|integer|min:2',
+            'min_miembros'  => 'sometimes|integer|min:1',
+            'max_miembros'  => 'nullable|integer|min:1|gte:min_miembros',
             'fecha_inicio'  => 'nullable|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
         ];

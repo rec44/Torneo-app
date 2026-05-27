@@ -40,4 +40,12 @@ class DeporteController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function restaurar(int $id): JsonResponse
+    {
+        $deporte = Deporte::withTrashed()->findOrFail($id);
+        $deporte->restore();
+
+        return response()->json($deporte);
+    }
 }

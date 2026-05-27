@@ -52,8 +52,8 @@ export function TorneoCard({ torneo, onVerDetalle }) {
         </div>
 
         <div className="torneo-meta-row">
-          <dt>Jugadores</dt>
-          <dd>Hasta {torneo.max_jugadores}</dd>
+          <dt>Equipos inscritos</dt>
+          <dd>{torneo.equipos_count ?? 0} / {torneo.max_jugadores}</dd>
         </div>
 
         <div className="torneo-meta-row">

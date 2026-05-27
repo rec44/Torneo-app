@@ -1,39 +1,43 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useDeportes } from '../hooks/useDeportes'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useTorneo } from '../hooks/useTorneo'
 import { torneoService } from '../services/torneoService'
 import './CrearTorneoPage.css'
 
-const FORMATOS = [
-  { value: 'eliminacion_simple', label: 'Eliminación directa' },
-  { value: 'eliminacion_doble', label: 'Doble eliminación' },
-  { value: 'round_robin', label: 'Round Robin' },
-  { value: 'suizo', label: 'Sistema Suizo' },
-]
-
 const TAMANIOS_BRACKET = [2, 4, 8, 16, 32]
 
-const FORM_INICIAL = {
-  nombre: '',
-  deporte_id: '',
-  formato: '',
-  max_jugadores: '',
-  min_miembros: '1',
-  max_miembros: '',
-  elo_minimo: '',
-  elo_maximo: '',
-  fecha_inicio: '',
-  fecha_fin: '',
+function toDateInput(fechaStr) {
+  if (!fechaStr) return ''
+  return new Date(fechaStr).toISOString().slice(0, 10)
 }
 
-export function CrearTorneoPage() {
+export function EditarTorneoPage() {
+  const { id } = useParams()
   const navigate = useNavigate()
-  const { deportes, loading: loadingDeportes } = useDeportes()
+  const { torneo, loading: loadingTorneo, error: errorCarga, cargar } = useTorneo()
 
-  const [form, setForm] = useState(FORM_INICIAL)
+  const [form, setForm] = useState(null)
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState(null)
   const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    cargar(id)
+  }, [id, cargar])
+
+  useEffect(() => {
+    if (!torneo) return
+    setForm({
+      nombre:        torneo.nombre ?? '',
+      max_jugadores: torneo.max_jugadores ?? '',
+      min_miembros:  torneo.min_miembros ?? 1,
+      max_miembros:  torneo.max_miembros ?? '',
+      elo_minimo:    torneo.elo_minimo ?? '',
+      elo_maximo:    torneo.elo_maximo ?? '',
+      fecha_inicio:  toDateInput(torneo.fecha_inicio),
+      fecha_fin:     toDateInput(torneo.fecha_fin),
+    })
+  }, [torneo])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -49,43 +53,84 @@ export function CrearTorneoPage() {
 
     const payload = {
       nombre:        form.nombre,
-      deporte_id:    Number(form.deporte_id),
-      formato:       form.formato,
       max_jugadores: Number(form.max_jugadores),
       min_miembros:  form.min_miembros !== '' ? Number(form.min_miembros) : 1,
-      ...(form.max_miembros !== '' && { max_miembros: Number(form.max_miembros) }),
-      ...(form.elo_minimo   !== '' && { elo_minimo:   Number(form.elo_minimo) }),
-      ...(form.elo_maximo   !== '' && { elo_maximo:   Number(form.elo_maximo) }),
-      ...(form.fecha_inicio && { fecha_inicio: form.fecha_inicio }),
-      ...(form.fecha_fin    && { fecha_fin:    form.fecha_fin }),
+      max_miembros:  form.max_miembros !== '' ? Number(form.max_miembros) : null,
+      elo_minimo:    form.elo_minimo   !== '' ? Number(form.elo_minimo)   : null,
+      elo_maximo:    form.elo_maximo   !== '' ? Number(form.elo_maximo)   : null,
+      fecha_inicio:  form.fecha_inicio || null,
+      fecha_fin:     form.fecha_fin    || null,
     }
 
     try {
-      await torneoService.create(payload)
-      navigate('/torneos')
+      await torneoService.update(id, payload)
+      navigate(`/torneos/${id}`)
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrores(err.response.data.errors)
       } else {
-        setErrorGeneral(err.response?.data?.message ?? 'Error al crear el torneo. Inténtalo de nuevo.')
+        setErrorGeneral(err.response?.data?.message ?? 'Error al guardar los cambios.')
       }
     } finally {
       setEnviando(false)
     }
   }
 
+  if (loadingTorneo || !form) {
+    return (
+      <div className="crear-torneo-page">
+        <div className="crear-torneo-container">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 32 }}>
+            <div className="skeleton-line skeleton-line--short" />
+            <div className="skeleton-line skeleton-line--title" />
+            <div className="skeleton-line" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (errorCarga) {
+    return (
+      <div className="crear-torneo-page">
+        <div className="crear-torneo-container">
+          <p style={{ color: '#dc2626' }}>{errorCarga}</p>
+          <Link to="/torneos" className="btn-volver">Volver a torneos</Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="crear-torneo-page">
       <div className="crear-torneo-container">
+
         <div className="crear-torneo-header">
-          <Link to="/torneos" className="btn-volver">
+          <Link to={`/torneos/${id}`} className="btn-volver">
             <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Volver
+            Volver al torneo
           </Link>
-          <h1>Nuevo torneo</h1>
-          <p className="crear-torneo-subtitulo">Rellena los datos para crear un nuevo torneo.</p>
+          <h1>Editar torneo</h1>
+          <p className="crear-torneo-subtitulo">
+            Modifica los datos del torneo. El deporte y el formato no se pueden cambiar.
+          </p>
+        </div>
+
+        {/* Info de solo lectura */}
+        <div className="editar-readonly-info">
+          {torneo.deporte && (
+            <span className="editar-readonly-tag">{torneo.deporte.nombre}</span>
+          )}
+          <span className="editar-readonly-tag editar-readonly-tag--formato">
+            {{
+              eliminacion_simple: 'Eliminación directa',
+              eliminacion_doble:  'Doble eliminación',
+              round_robin:        'Round Robin',
+              suizo:              'Sistema Suizo',
+            }[torneo.formato] ?? torneo.formato}
+          </span>
         </div>
 
         {errorGeneral && (
@@ -109,54 +154,10 @@ export function CrearTorneoPage() {
                 className={'form-input' + (errores.nombre ? ' form-input--error' : '')}
                 value={form.nombre}
                 onChange={handleChange}
-                placeholder="Ej: Copa Primavera 2025"
                 maxLength={255}
                 required
               />
               {errores.nombre && <p className="form-field-error">{errores.nombre[0]}</p>}
-            </div>
-
-            <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="deporte_id" className="form-label">
-                  Deporte <span className="form-required">*</span>
-                </label>
-                <select
-                  id="deporte_id"
-                  name="deporte_id"
-                  className={'form-select' + (errores.deporte_id ? ' form-input--error' : '')}
-                  value={form.deporte_id}
-                  onChange={handleChange}
-                  required
-                  disabled={loadingDeportes}
-                >
-                  <option value="">Selecciona un deporte</option>
-                  {deportes.map(d => (
-                    <option key={d.id} value={d.id}>{d.nombre}</option>
-                  ))}
-                </select>
-                {errores.deporte_id && <p className="form-field-error">{errores.deporte_id[0]}</p>}
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="formato" className="form-label">
-                  Formato <span className="form-required">*</span>
-                </label>
-                <select
-                  id="formato"
-                  name="formato"
-                  className={'form-select' + (errores.formato ? ' form-input--error' : '')}
-                  value={form.formato}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Selecciona un formato</option>
-                  {FORMATOS.map(f => (
-                    <option key={f.value} value={f.value}>{f.label}</option>
-                  ))}
-                </select>
-                {errores.formato && <p className="form-field-error">{errores.formato[0]}</p>}
-              </div>
             </div>
           </fieldset>
 
@@ -199,7 +200,6 @@ export function CrearTorneoPage() {
                   value={form.min_miembros}
                   onChange={handleChange}
                   min={1}
-                  placeholder="1"
                 />
                 {errores.min_miembros && <p className="form-field-error">{errores.min_miembros[0]}</p>}
               </div>
@@ -235,7 +235,7 @@ export function CrearTorneoPage() {
                   value={form.elo_minimo}
                   onChange={handleChange}
                   min={0}
-                  placeholder="Ej: 400"
+                  placeholder="Sin límite"
                 />
                 {errores.elo_minimo && <p className="form-field-error">{errores.elo_minimo[0]}</p>}
               </div>
@@ -252,7 +252,7 @@ export function CrearTorneoPage() {
                   value={form.elo_maximo}
                   onChange={handleChange}
                   min={0}
-                  placeholder="Ej: 1200"
+                  placeholder="Sin límite"
                 />
                 {errores.elo_maximo && <p className="form-field-error">{errores.elo_maximo[0]}</p>}
               </div>
@@ -297,11 +297,11 @@ export function CrearTorneoPage() {
 
           {/* ── Acciones ───────────────────────────────── */}
           <div className="form-actions">
-            <Link to="/torneos" className="btn-cancelar">
+            <Link to={`/torneos/${id}`} className="btn-cancelar">
               Cancelar
             </Link>
             <button type="submit" className="btn-submit" disabled={enviando}>
-              {enviando ? 'Creando...' : 'Crear torneo'}
+              {enviando ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
 

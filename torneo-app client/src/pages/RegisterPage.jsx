@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import './AuthPage.css'
 
 export function RegisterPage() {
   const { user, loading: loadingAuth, register } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/torneos'
 
   const [form, setForm] = useState({
     nombre: '',
@@ -32,7 +34,7 @@ export function RegisterPage() {
     setErrorGeneral(null)
     try {
       await register(form.nombre, form.email, form.contrasena, form.contrasena_confirmation)
-      navigate('/torneos')
+      navigate(redirectTo, { replace: true })
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrores(err.response.data.errors)

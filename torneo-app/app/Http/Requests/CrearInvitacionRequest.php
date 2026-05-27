@@ -9,9 +9,11 @@ class CrearInvitacionRequest extends FormRequest
     public function authorize(): bool
     {
         $torneo = $this->route('torneo');
+        $equipo = $this->route('equipo');
 
         return $this->user()->id === $torneo->creado_por
-            || $this->user()->rol === 'admin';
+            || $this->user()->rol === 'admin'
+            || ($equipo && $this->user()->id === $equipo->capitan_id);
     }
 
     public function rules(): array

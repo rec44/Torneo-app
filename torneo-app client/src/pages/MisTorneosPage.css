@@ -1,0 +1,47 @@
+.mis-torneos-page {
+  padding: 40px 32px 64px;
+  text-align: left;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px 48px;
+  }
+}
+
+.mis-torneos-header {
+  margin-bottom: 40px;
+
+  h1 { margin: 0; }
+}
+
+.mis-torneos-seccion {
+  margin-bottom: 48px;
+}
+
+.mis-torneos-seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 20px;
+}
+
+.mis-torneos-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 99px;
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.mis-torneos-vacio {
+  color: var(--text);
+  font-size: 15px;
+}

@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import './AuthPage.css'
 
 export function LoginPage() {
   const { user, loading: loadingAuth, login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/torneos'
 
   const [form, setForm] = useState({ email: '', contrasena: '' })
   const [error, setError] = useState(null)
@@ -25,7 +27,7 @@ export function LoginPage() {
     setError(null)
     try {
       await login(form.email, form.contrasena)
-      navigate('/torneos')
+      navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(
         err.response?.data?.errors?.email?.[0] ??

@@ -40,7 +40,11 @@ class AuthController extends Controller
             'contrasena'=> 'required|string',
         ]);
 
-        $usuario = Usuario::where('email', $data['email'])->first();
+        $usuario = Usuario::withTrashed()->where('email', $data['email'])->first();
+
+        if ($usuario && $usuario->trashed()) {
+            return response()->json(['message' => 'Tu cuenta ha sido baneada.'], 403);
+        }
 
         if (! $usuario || ! Hash::check($data['contrasena'], $usuario->contrasena)) {
             throw ValidationException::withMessages([

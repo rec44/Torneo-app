@@ -25,7 +25,7 @@ class TorneoFactory extends Factory
             'max_jugadores'=> $this->faker->randomElement([4, 8, 16, 32]),
             'fecha_inicio' => $fechaInicio,
             'fecha_fin'    => $this->faker->dateTimeBetween($fechaInicio, '+6 months'),
-            'formato'      => $this->faker->randomElement(['eliminacion_simple', 'eliminacion_doble', 'round_robin', 'suizo']),
+            'formato'      => 'eliminacion_simple',
             'estado'       => $this->faker->randomElement(['abierto', 'en_curso', 'finalizado', 'cancelado']),
         ];
     }

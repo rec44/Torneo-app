@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'usuarios';
 
@@ -50,25 +51,15 @@ class Usuario extends Authenticatable
         return $this->hasMany(Torneo::class, 'creado_por');
     }
 
-    public function torneos(): BelongsToMany
+    public function equipos(): BelongsToMany
     {
-        return $this->belongsToMany(Torneo::class, 'torneo_usuarios', 'usuario_id', 'torneo_id')
-            ->withPivot(['semilla', 'elo_al_unirse'])
+        return $this->belongsToMany(Equipo::class, 'equipo_usuarios', 'usuario_id', 'equipo_id')
+            ->withPivot(['elo_al_unirse'])
             ->withTimestamps();
     }
 
-    public function partidosComoJugador1(): HasMany
+    public function equiposCapitan(): HasMany
     {
-        return $this->hasMany(Partido::class, 'jugador1_id');
-    }
-
-    public function partidosComoJugador2(): HasMany
-    {
-        return $this->hasMany(Partido::class, 'jugador2_id');
-    }
-
-    public function partidosGanados(): HasMany
-    {
-        return $this->hasMany(Partido::class, 'ganador_id');
+        return $this->hasMany(Equipo::class, 'capitan_id');
     }
 }

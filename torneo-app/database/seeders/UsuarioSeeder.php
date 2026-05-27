@@ -25,6 +25,14 @@ class UsuarioSeeder extends Seeder
             'rol'        => 'user',
         ]);
 
+        Usuario::create([
+            'nombre'     => 'Sergio',
+            'email'      => 'sergio@example.com',
+            'contrasena' => 'sergio123',
+            'elo'        => 500,
+            'rol'        => 'user',
+        ]);
+
         Usuario::factory(10)->create();
     }
 }

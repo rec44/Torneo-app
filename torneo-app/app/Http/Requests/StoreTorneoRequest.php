@@ -19,6 +19,8 @@ class StoreTorneoRequest extends FormRequest
             'elo_minimo'    => 'nullable|integer|min:0',
             'elo_maximo'    => 'nullable|integer|min:0',
             'max_jugadores' => 'required|integer|min:2',
+            'min_miembros'  => 'integer|min:1',
+            'max_miembros'  => 'nullable|integer|min:1|gte:min_miembros',
             'fecha_inicio'  => 'nullable|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
             'formato'       => 'required|in:eliminacion_simple,eliminacion_doble,round_robin,suizo',

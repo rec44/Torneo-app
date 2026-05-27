@@ -14,6 +14,7 @@ class InvitacionTorneo extends Model
 
     protected $fillable = [
         'torneo_id',
+        'equipo_id',
         'codigo',
         'max_usos',
         'usos_actuales',
@@ -32,6 +33,11 @@ class InvitacionTorneo extends Model
     public function torneo(): BelongsTo
     {
         return $this->belongsTo(Torneo::class, 'torneo_id');
+    }
+
+    public function equipo(): BelongsTo
+    {
+        return $this->belongsTo(Equipo::class, 'equipo_id');
     }
 
     public function estaVigente(): bool

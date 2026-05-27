@@ -43,12 +43,34 @@ class UsuarioController extends Controller
 
     public function destroy(Request $request, Usuario $usuario): JsonResponse
     {
-        if ($request->user()->id !== $usuario->id && $request->user()->rol !== 'admin') {
+        if ($request->user()->rol !== 'admin') {
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
+        if ($usuario->id === $request->user()->id) {
+            return response()->json(['message' => 'No puedes banearte a ti mismo.'], 422);
+        }
+
+        $usuario->tokens()->delete();
         $usuario->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Usuario baneado correctamente.']);
+    }
+
+    public function desbanear(Request $request, int $id): JsonResponse
+    {
+        if ($request->user()->rol !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $usuario = Usuario::withTrashed()->findOrFail($id);
+
+        if (! $usuario->trashed()) {
+            return response()->json(['message' => 'El usuario no está baneado.'], 422);
+        }
+
+        $usuario->restore();
+
+        return response()->json(['message' => 'Usuario desbaneado correctamente.', 'usuario' => $usuario]);
     }
 }

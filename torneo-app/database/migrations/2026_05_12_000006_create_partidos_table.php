@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('partidos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('torneo_id')->constrained('torneos')->cascadeOnDelete();
-            $table->foreignId('jugador1_id')->nullable()->constrained('usuarios')->nullOnDelete();
-            $table->foreignId('jugador2_id')->nullable()->constrained('usuarios')->nullOnDelete();
-            $table->foreignId('ganador_id')->nullable()->constrained('usuarios')->nullOnDelete();
-            $table->string('resultado_j1')->nullable();
-            $table->string('resultado_j2')->nullable();
+            $table->foreignId('equipo1_id')->nullable()->constrained('equipos')->nullOnDelete();
+            $table->foreignId('equipo2_id')->nullable()->constrained('equipos')->nullOnDelete();
+            $table->foreignId('ganador_equipo_id')->nullable()->constrained('equipos')->nullOnDelete();
+            $table->string('resultado_e1')->nullable();
+            $table->string('resultado_e2')->nullable();
             $table->enum('estado', ['pendiente', 'en_curso', 'finalizado', 'cancelado'])->default('pendiente');
             $table->integer('ronda');
             $table->dateTime('programado_en')->nullable();

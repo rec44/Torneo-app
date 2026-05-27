@@ -25,6 +25,14 @@ export function Navbar() {
         >
           Torneos
         </NavLink>
+        {user && (
+          <NavLink
+            to="/perfil"
+            className={({ isActive }) => 'navbar-link' + (isActive ? ' navbar-link--active' : '')}
+          >
+            Perfil
+          </NavLink>
+        )}
       </div>
 
       <div className="navbar-user">

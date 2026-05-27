@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(php artisan tinker '--execute= *)",
+      "Bash(php artisan *)",
+      "Bash(mysql -u root -e \"USE proyectoTorneo; SELECT id, nombre, semilla, capitan_id FROM equipos WHERE torneo_id=2 ORDER BY semilla; SELECT COUNT\\(*\\) as total_partidos FROM partidos WHERE torneo_id=2; SELECT id, ronda, equipo1_id, equipo2_id, estado FROM partidos WHERE torneo_id=2 ORDER BY ronda, id;\")",
+      "Bash(where mysql *)",
+      "Read(//c/Program Files/**)",
+      "Bash(\"/c/xampp/mysql/bin/mysql\" -u root --password=\"\" -e \"USE proyectoTorneo; SELECT id, nombre, semilla, capitan_id FROM equipos WHERE torneo_id=2 ORDER BY semilla; SELECT COUNT\\(*\\) as total_partidos FROM partidos WHERE torneo_id=2;\")",
+      "Bash(git add *)",
+      "Bash(git reset *)"
     ]
   }
 }

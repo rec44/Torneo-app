@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             DeporteSeeder::class,
             UsuarioSeeder::class,
             TorneoSeeder::class,
+            TorneosDemoSeeder::class,
         ]);
     }
 }

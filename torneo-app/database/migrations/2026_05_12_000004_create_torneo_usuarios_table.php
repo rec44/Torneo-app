@@ -8,20 +8,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('torneo_usuarios', function (Blueprint $table) {
+        Schema::create('equipos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('torneo_id')->constrained('torneos')->cascadeOnDelete();
-            $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete();
+            $table->string('nombre');
+            $table->foreignId('capitan_id')->constrained('usuarios')->cascadeOnDelete();
             $table->integer('semilla')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('equipo_usuarios', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('equipo_id')->constrained('equipos')->cascadeOnDelete();
+            $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete();
             $table->integer('elo_al_unirse')->nullable();
             $table->timestamps();
 
-            $table->unique(['torneo_id', 'usuario_id']);
+            $table->unique(['equipo_id', 'usuario_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('torneo_usuarios');
+        Schema::dropIfExists('equipo_usuarios');
+        Schema::dropIfExists('equipos');
     }
 };
