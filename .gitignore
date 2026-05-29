@@ -1,6 +1,9 @@
 # Diagramas y documentacion (no forman parte del codigo)
 *.drawio
 
+# Claude Code
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
