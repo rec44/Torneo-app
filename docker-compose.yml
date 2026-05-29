@@ -1,0 +1,74 @@
+services:
+  # ---------- FRONTEND: React (compilado) servido por Nginx ----------
+  # Es la cara visible y hace de proxy hacia el backend (/api).
+  frontend:
+    build: ./torneo-app-client
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"                       # http://torneo.local
+    depends_on:
+      - web
+    networks:
+      - red
+
+
+  # ---------- BACKEND: Laravel (API) con Apache + PHP ----------
+  # No expone puerto al exterior; solo lo usa el frontend por la red interna.
+  web:
+    build: ./torneo-app
+    container_name: web
+    restart: unless-stopped
+    volumes:
+      - ./torneo-app:/var/www/html    # tu código Laravel
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    depends_on:
+      - db
+    networks:
+      - red
+
+
+  # ---------- BASE DE DATOS: MySQL ----------
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: torneo_app
+      MYSQL_USER: sergio
+      MYSQL_PASSWORD: sergio123
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - red
+
+
+  # ---------- SERVIDOR DNS: BIND9 ----------
+  dns:
+    image: ubuntu/bind9:latest
+    container_name: dns
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - ./dns/named.conf:/etc/bind/named.conf
+      - ./dns/zonas:/etc/bind/zonas
+    networks:
+      - red
+
+
+volumes:
+  db_data:
+
+
+networks:
+  red:
+    driver: bridge
+
+
