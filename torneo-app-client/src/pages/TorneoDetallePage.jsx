@@ -35,7 +35,7 @@ function formatFecha(fechaStr) {
   })
 }
 
-const ALL_TABS   = ['bracket', 'equipos', 'mi_equipo', 'partidos']
+const ALL_TABS   = ['bracket', 'mi_equipo', 'equipos', 'partidos']
 const TAB_LABELS = { bracket: 'Bracket', equipos: 'Equipos', mi_equipo: 'Mi equipo', partidos: 'Historial' }
 
 export function TorneoDetallePage() {
@@ -55,9 +55,7 @@ export function TorneoDetallePage() {
   const [editandoId, setEditandoId] = useState(null)
   const [nombreEditar, setNombreEditar] = useState('')
 
-  // Código de invitación
-  const [mostrarFormCodigo, setMostrarFormCodigo] = useState(false)
-  const [codigoInvitacion, setCodigoInvitacion] = useState('')
+  const [confirmarIniciar, setConfirmarIniciar] = useState(false)
 
   const [modalPartido,   setModalPartido]   = useState(null)
   const [invitacion,     setInvitacion]     = useState(null)
@@ -246,11 +244,12 @@ export function TorneoDetallePage() {
 
   const minMiembros = torneo.min_miembros ?? 1
 
-  const equiposOrdenados  = [...(torneo.equipos ?? [])].sort(
-    (a, b) => (a.semilla ?? 999) - (b.semilla ?? 999)
-  )
+  const equiposOrdenados  = [...(torneo.equipos ?? [])].sort((a, b) => {
+    if (a.bloqueado !== b.bloqueado) return a.bloqueado ? -1 : 1
+    return (a.semilla ?? 999) - (b.semilla ?? 999)
+  })
 
-  const equiposConfirmados  = equiposOrdenados.filter(e => (e.miembros?.length ?? 0) >= minMiembros)
+  const equiposConfirmados  = equiposOrdenados.filter(e => e.bloqueado)
   const equiposIncompletos  = equiposOrdenados.filter(e => (e.miembros?.length ?? 0) < minMiembros)
   const hayIncompletos      = equiposIncompletos.length > 0
   const partidosOrdenados = [...(torneo.partidos ?? [])].sort(
@@ -358,37 +357,10 @@ export function TorneoDetallePage() {
           <div className="detalle-acciones">
             <button
               className="btn-primary"
-              onClick={() => { setMostrarFormCrear(v => !v); setMostrarFormCodigo(false) }}
+              onClick={() => setMostrarFormCrear(v => !v)}
             >
               Crear equipo
             </button>
-            <button
-              className="btn-secondary"
-              onClick={() => { setMostrarFormCodigo(v => !v); setMostrarFormCrear(false) }}
-            >
-              Unirse con código
-            </button>
-          </div>
-        )}
-
-        {/* Acción iniciar torneo */}
-        {puedeIniciar && (
-          <div className="detalle-acciones-iniciar">
-            <button className="btn-iniciar" onClick={handleIniciar} disabled={accionLoading}>
-              {accionLoading ? 'Iniciando…' : 'Iniciar torneo'}
-            </button>
-            {hayIncompletos && (
-              <p className="iniciar-advertencia">
-                <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
-                  <path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <path d="M8 7v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-                {equiposIncompletos.length} equipo{equiposIncompletos.length !== 1 ? 's' : ''} sin completar
-                ({equiposIncompletos.map(e => e.nombre).join(', ')})
-                {' '}será{equiposIncompletos.length !== 1 ? 'n' : ''} eliminado{equiposIncompletos.length !== 1 ? 's' : ''} al iniciar
-                por no alcanzar el mínimo de {minMiembros} miembro{minMiembros !== 1 ? 's' : ''}.
-              </p>
-            )}
           </div>
         )}
 
@@ -409,26 +381,29 @@ export function TorneoDetallePage() {
           </form>
         )}
 
-        {/* Formulario código */}
-        {mostrarFormCodigo && !yaEnEquipo && (
-          <form className="detalle-form-inline" onSubmit={handleUnirseCodigo}>
-            <input
-              type="text" className="filtro-input" placeholder="Código de invitación"
-              value={codigoInvitacion}
-              onChange={e => setCodigoInvitacion(e.target.value.toUpperCase())}
-              maxLength={8} autoFocus required
-            />
-            <button type="submit" className="btn-primary" disabled={accionLoading}>
-              {accionLoading ? 'Uniéndose…' : 'Unirse'}
-            </button>
-            <button type="button" className="btn-secondary" onClick={() => setMostrarFormCodigo(false)}>
-              Cancelar
-            </button>
-          </form>
-        )}
-
         {accionError && <p className="detalle-accion-error">{accionError}</p>}
         {accionOk    && <p className="detalle-accion-ok">{accionOk}</p>}
+
+        {/* Acción iniciar torneo — separada visualmente */}
+        {puedeIniciar && (
+          <div className="detalle-acciones-iniciar">
+            {hayIncompletos && (
+              <p className="iniciar-advertencia">
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                  <path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M8 7v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                {equiposIncompletos.length} equipo{equiposIncompletos.length !== 1 ? 's' : ''} sin completar
+                ({equiposIncompletos.map(e => e.nombre).join(', ')})
+                {' '}será{equiposIncompletos.length !== 1 ? 'n' : ''} eliminado{equiposIncompletos.length !== 1 ? 's' : ''} al iniciar
+                por no alcanzar el mínimo de {minMiembros} miembro{minMiembros !== 1 ? 's' : ''}.
+              </p>
+            )}
+            <button className="btn-iniciar" onClick={() => setConfirmarIniciar(true)} disabled={accionLoading}>
+              Iniciar torneo
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Tabs */}
@@ -503,7 +478,7 @@ export function TorneoDetallePage() {
                 const confirmado    = numMiembros >= minMiembros
 
                 return (
-                  <div key={equipo.id} className={`equipo-card ${esMiEquipo ? 'equipo-card--propio' : ''}`}>
+                  <div key={equipo.id} className={`equipo-card ${esMiEquipo ? 'equipo-card--propio' : ''} ${equipo.bloqueado ? 'equipo-card--inscrito' : ''}`}>
                     {/* Cabecera del equipo */}
                     <div className="equipo-card-header">
                       <div>
@@ -530,9 +505,14 @@ export function TorneoDetallePage() {
                             {equipo.semilla && (
                               <span className="equipo-semilla">#{equipo.semilla}</span>
                             )}
-                            <span className={`badge-equipo-estado badge-equipo-estado--${confirmado ? 'listo' : 'formacion'}`}>
-                              {confirmado ? 'Inscrito' : 'En formación'}
-                            </span>
+                            {equipo.bloqueado && (
+                              <span className="badge-inscrito-confirmado">
+                                <svg viewBox="0 0 12 12" fill="none" width="11" height="11" aria-hidden="true">
+                                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                Inscrito
+                              </span>
+                            )}
                             {esMiEquipo && <span className="badge-mi-equipo">Mi equipo</span>}
                           </>
                         )}
@@ -575,7 +555,7 @@ export function TorneoDetallePage() {
                         ? <span className="equipo-sin-miembros">Sin miembros aún</span>
                         : equipo.miembros?.map(m => (
                           <span key={m.id} className="equipo-miembro">
-                            {m.nombre}
+                            <Link to={`/usuarios/${m.id}`} className="equipo-miembro-link">{m.nombre}</Link>
                             <span className="miembro-elo">ELO {m.pivot?.elo_al_unirse ?? m.elo}</span>
                           </span>
                         ))
@@ -628,9 +608,14 @@ export function TorneoDetallePage() {
             <div className="mi-equipo-header">
               <div className="mi-equipo-header-info">
                 <h3 className="mi-equipo-nombre">{miEquipo.nombre}</h3>
-                <span className={`badge-equipo-estado badge-equipo-estado--${(miEquipo.miembros?.length ?? 0) >= minMiembros ? 'listo' : 'formacion'}`}>
-                  {(miEquipo.miembros?.length ?? 0) >= minMiembros ? 'Inscrito' : 'En formación'}
-                </span>
+                {miEquipo.bloqueado && (
+                  <span className="badge-inscrito-confirmado">
+                    <svg viewBox="0 0 12 12" fill="none" width="11" height="11" aria-hidden="true">
+                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Inscrito
+                  </span>
+                )}
                 {miEquipo.bloqueado && (
                   <span className="badge-bloqueado">Bloqueado</span>
                 )}
@@ -656,7 +641,7 @@ export function TorneoDetallePage() {
               {miEquipo.miembros?.map(m => (
                 <div key={m.id} className="mi-equipo-miembro">
                   <div className="mi-equipo-miembro-info">
-                    <span className="mi-equipo-miembro-nombre">{m.nombre}</span>
+                    <Link to={`/usuarios/${m.id}`} className="mi-equipo-miembro-nombre mi-equipo-miembro-link">{m.nombre}</Link>
                     {m.id === miEquipo.capitan?.id && <span className="badge-capitan">Capitán</span>}
                     <span className="mi-equipo-miembro-elo">ELO {m.pivot?.elo_al_unirse ?? m.elo}</span>
                   </div>
@@ -678,10 +663,12 @@ export function TorneoDetallePage() {
               <div className="mi-equipo-invitar">
                 {invitacion?.codigo ? (
                   <div className="invitacion-codigo">
-                    <code className="invitacion-codigo-text">{invitacion.codigo}</code>
+                    <code className="invitacion-codigo-text">
+                      {`${window.location.origin}/unirse/${invitacion.codigo}`}
+                    </code>
                     <button className="btn-secondary btn--sm"
                       onClick={() => handleCopiarCodigo(`${window.location.origin}/unirse/${invitacion.codigo}`)}>
-                      {copiadoOk ? '¡Copiado!' : 'Copiar link'}
+                      {copiadoOk ? '¡Copiado!' : 'Copiar'}
                     </button>
                     <button className="btn-secondary btn--sm"
                       onClick={() => setInvitacion(null)}>
@@ -719,10 +706,10 @@ export function TorneoDetallePage() {
         {/* ── PARTIDOS ─────────────────────────────────────── */}
         {tab === 'partidos' && (
           <div className="partidos-historial">
-            {partidosOrdenados.length === 0 ? (
-              <p className="detalle-vacio">No hay partidos registrados todavía.</p>
+            {partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).length === 0 ? (
+              <p className="detalle-vacio">No hay partidos jugados todavía.</p>
             ) : (
-              partidosOrdenados.map(p => (
+              partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).map(p => (
                 <div key={p.id} className={`partido-fila partido-fila--${p.estado}`}>
                   <span className="partido-ronda">R{p.ronda ?? '?'}</span>
                   <div className="partido-enfrentamiento">
@@ -748,6 +735,42 @@ export function TorneoDetallePage() {
         )}
 
       </div>
+
+      {confirmarIniciar && (
+        <div className="modal-overlay" onMouseDown={() => setConfirmarIniciar(false)}>
+          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-titulo">¿Iniciar el torneo?</h3>
+              <button className="modal-cerrar" onClick={() => setConfirmarIniciar(false)} aria-label="Cerrar">
+                <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-form">
+              <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
+                Se generará el bracket y el torneo pasará a <strong>En curso</strong>.
+                {hayIncompletos && (
+                  <> Los equipos sin confirmar (<strong>{equiposIncompletos.map(e => e.nombre).join(', ')}</strong>) serán eliminados.</>
+                )}
+                {' '}Esta acción no se puede deshacer.
+              </p>
+              <div className="modal-acciones">
+                <button className="btn-secondary" onClick={() => setConfirmarIniciar(false)} disabled={accionLoading}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-iniciar"
+                  disabled={accionLoading}
+                  onClick={async () => { setConfirmarIniciar(false); await handleIniciar() }}
+                >
+                  {accionLoading ? 'Iniciando…' : 'Sí, iniciar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalPartido && (
         <ResultadoModal

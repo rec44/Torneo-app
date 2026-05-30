@@ -7,6 +7,7 @@ import { CrearTorneoPage } from './pages/CrearTorneoPage'
 import { EditarTorneoPage } from './pages/EditarTorneoPage'
 import { MisTorneosPage } from './pages/MisTorneosPage'
 import { PerfilPage } from './pages/PerfilPage'
+import { PerfilPublicoPage } from './pages/PerfilPublicoPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { UnirseInvitacionPage } from './pages/UnirseInvitacionPage'
@@ -24,6 +25,7 @@ function App() {
         <Route path="/unirse/:codigo" element={<UnirseInvitacionPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/usuarios/:id" element={<PerfilPublicoPage />} />
 
         {/* Rutas protegidas */}
         <Route path="/mis-torneos" element={

@@ -3,39 +3,36 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function authViaBearerToken(Request $request)
     {
-        if (Auth::check() && Auth::user()->rol === 'admin') {
-            return redirect()->route('admin.dashboard');
+        $raw = $request->query('token');
+
+        if (! $raw) {
+            return $this->accesoDenegado('No se proporcionó credencial de acceso.');
         }
 
-        return view('admin.login');
-    }
+        $accessToken = PersonalAccessToken::findToken($raw);
 
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email'      => 'required|email',
-            'contrasena' => 'required|string',
-        ]);
-
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->contrasena], $request->boolean('recordar'))) {
-            if (Auth::user()->rol !== 'admin') {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Acceso restringido a administradores.']);
-            }
-
-            $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+        if (! $accessToken) {
+            return $this->accesoDenegado('La sesión no es válida o ha expirado. Inicia sesión de nuevo en la aplicación.');
         }
 
-        return back()->withErrors(['email' => 'Credenciales incorrectas.'])->withInput($request->only('email'));
+        $usuario = $accessToken->tokenable;
+
+        if (! $usuario || $usuario->rol !== 'admin') {
+            return $this->accesoDenegado('Tu cuenta no tiene permisos de administrador.');
+        }
+
+        Auth::login($usuario);
+        $request->session()->regenerate();
+
+        return redirect()->route('admin.dashboard');
     }
 
     public function logout(Request $request)
@@ -44,33 +41,11 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login');
+        return redirect('http://localhost:5173');
     }
 
-    public function showRegister()
+    private function accesoDenegado(string $mensaje)
     {
-        if (Auth::check() && Auth::user()->rol === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return view('admin.register');
-    }
-
-    public function register(Request $request)
-    {
-        $request->validate([
-            'nombre'     => 'required|string|max:255',
-            'email'      => 'required|email|unique:usuarios,email',
-            'contrasena' => 'required|string|min:8|confirmed',
-        ]);
-
-        Usuario::create([
-            'nombre'     => $request->nombre,
-            'email'      => $request->email,
-            'contrasena' => $request->contrasena,
-            'rol'        => 'user',
-        ]);
-
-        return redirect()->route('admin.login')->with('success', 'Cuenta creada. Ya puedes iniciar sesión.');
+        return response()->view('admin.acceso-denegado', ['mensaje' => $mensaje], 403);
     }
 }

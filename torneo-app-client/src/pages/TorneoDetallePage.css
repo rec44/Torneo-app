@@ -153,6 +153,10 @@
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  width: 100%;
 }
 
 .iniciar-advertencia {
@@ -378,6 +382,38 @@
   border-color: var(--accent-border);
 }
 
+.equipo-card--inscrito {
+  border-color: rgba(34, 197, 94, 0.4);
+  border-left: 3px solid #16a34a;
+  background: rgba(34, 197, 94, 0.03);
+
+  @media (prefers-color-scheme: dark) {
+    border-color: rgba(74, 222, 128, 0.35);
+    border-left-color: #4ade80;
+    background: rgba(74, 222, 128, 0.04);
+  }
+}
+
+.badge-inscrito-confirmado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 99px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  letter-spacing: 0.01em;
+
+  @media (prefers-color-scheme: dark) {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.3);
+  }
+}
+
 .equipos-owner-toolbar {
   margin-bottom: 12px;
 }
@@ -600,6 +636,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: flex-start;
 }
 
 .mi-equipo-retirar {
@@ -719,20 +756,29 @@
 .invitacion-codigo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
 }
 
 .invitacion-codigo-text {
   font-family: monospace;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   color: var(--accent);
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  border-radius: 6px;
-  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  word-break: break-all;
+  flex: 1 1 0;
+  text-align: center;
 }
 
 .btn-unirse-equipo {
@@ -1314,4 +1360,26 @@
   padding: 48px 0;
   color: var(--text);
   font-size: 15px;
+}
+
+/* ─── Links de miembros ────────────────────────────────────── */
+
+.equipo-miembro-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+.mi-equipo-miembro-link {
+  color: var(--text-h);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
 }

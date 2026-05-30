@@ -19,6 +19,17 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
     e.preventDefault()
     if (!res1.trim() || !res2.trim()) { setError('Introduce los dos marcadores.'); return }
     if (!ganadorId) { setError('Selecciona el ganador.'); return }
+
+    const n1 = parseFloat(res1)
+    const n2 = parseFloat(res2)
+    if (!isNaN(n1) && !isNaN(n2) && n1 !== n2) {
+      const ganadorCorrecto = n1 > n2 ? partido.equipo1?.id : partido.equipo2?.id
+      if (ganadorId !== ganadorCorrecto) {
+        setError('El ganador debe ser el equipo con mayor puntuación.')
+        return
+      }
+    }
+
     setLoading(true)
     setError(null)
     try {

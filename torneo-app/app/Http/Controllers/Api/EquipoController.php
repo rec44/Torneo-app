@@ -35,10 +35,10 @@ class EquipoController extends Controller
             return response()->json(['message' => 'El torneo no está abierto para inscripciones.'], 422);
         }
 
-        $totalEquipos = $torneo->equipos()->count();
+        $equiposBloqueados = $torneo->equipos()->where('bloqueado', true)->count();
 
-        if ($totalEquipos >= $torneo->max_jugadores) {
-            return response()->json(['message' => 'El torneo ya ha alcanzado el máximo de equipos permitidos.'], 422);
+        if ($equiposBloqueados >= $torneo->max_jugadores) {
+            return response()->json(['message' => 'El torneo ya tiene el máximo de equipos confirmados. No se pueden añadir más.'], 422);
         }
 
         $yaEnEquipo = Equipo::where('torneo_id', $torneo->id)

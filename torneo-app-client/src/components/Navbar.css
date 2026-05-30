@@ -64,6 +64,19 @@
   color: var(--text);
 }
 
+.navbar-btn-admin {
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: #1e2a3a;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.82; }
+}
+
 .navbar-btn-logout {
   padding: 5px 14px;
   font-size: 13px;

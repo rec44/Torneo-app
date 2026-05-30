@@ -7,14 +7,12 @@ use App\Http\Controllers\Admin\TorneoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn() => redirect()->route('admin.login'));
+Route::get('/', fn() => redirect()->route('admin.dashboard'));
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('login',    [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login',   [AuthController::class, 'login'])->name('login.post');
-    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('register',[AuthController::class, 'register'])->name('register.post');
+    // Puente: valida el token Sanctum de la app React y crea sesión admin
+    Route::get('auth', [AuthController::class, 'authViaBearerToken'])->name('auth');
 
     Route::middleware('admin_auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');

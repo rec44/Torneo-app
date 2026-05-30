@@ -2,6 +2,7 @@
   padding: 40px 32px 64px;
   text-align: left;
   max-width: 1000px;
+  margin: 0 auto;
 
   @media (max-width: 768px) {
     padding: 24px 16px 48px;
@@ -13,33 +14,113 @@
 .perfil-header {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 36px;
+  gap: 24px;
+  padding: 28px 28px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  @media (max-width: 768px) {
+    padding: 20px 18px;
+    gap: 16px;
+  }
 }
 
 .perfil-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.perfil-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.perfil-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 
 .perfil-nombre {
-  margin: 0 0 4px;
-  font-size: 22px;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .perfil-email {
   margin: 0;
   font-size: 14px;
   color: var(--text);
+}
+
+/* ─── Stats row ─────────────────────────────────────────────── */
+
+.perfil-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 16px 28px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 32px;
+
+  @media (max-width: 480px) {
+    padding: 14px 18px;
+  }
+}
+
+.perfil-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.perfil-stat-valor {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.perfil-stat-label {
+  font-size: 12px;
+  color: var(--text);
+  text-align: center;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.perfil-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
 }
 
 /* ─── Tabs ─────────────────────────────────────────────────── */
@@ -127,4 +208,181 @@
 .perfil-vacio {
   color: var(--text);
   font-size: 15px;
+}
+
+/* ─── Scroll horizontal (torneos activos) ───────────────────── */
+
+.torneos-scroll-h {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  /* scrollbar fina */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  &::-webkit-scrollbar { height: 5px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* Cards con ancho fijo para que no se encojan */
+  > * {
+    flex: 0 0 280px;
+    min-width: 0;
+  }
+}
+
+/* ─── Botón "Ver más" historial ─────────────────────────────── */
+
+.perfil-btn-mas {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover { opacity: 0.8; }
+}
+
+/* ─── ELO badge en el header ───────────────────────────────── */
+
+.perfil-elo-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 99px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+/* ─── Tab ELO por deporte ──────────────────────────────────── */
+
+.perfil-elo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+}
+
+.perfil-elo-global-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+}
+
+.perfil-elo-global-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.perfil-elo-global-valor {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.perfil-elo-lista {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.perfil-elo-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  font-size: 14px;
+
+  & + & { border-top: 1px solid var(--border); }
+}
+
+.perfil-elo-deporte {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.perfil-elo-valor {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Perfil público compartido ────────────────────────────── */
+
+.perfil-pub-page {
+  padding: 32px 32px 64px;
+  max-width: 600px;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px 48px;
+  }
+}
+
+.perfil-pub-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 20px 0 36px;
+}
+
+.perfil-pub-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 26px;
+}
+
+.perfil-pub-nombre {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.perfil-pub-seccion-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.perfil-pub-elo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.perfil-pub-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px 0;
+}
+
+.perfil-pub-error {
+  color: var(--text);
+  font-size: 15px;
+  margin-bottom: 16px;
 }

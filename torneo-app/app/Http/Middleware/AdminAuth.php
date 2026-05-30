@@ -12,12 +12,16 @@ class AdminAuth
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::check()) {
-            return redirect()->route('admin.login');
+            return response()->view('admin.acceso-denegado', [
+                'mensaje' => 'Accede al panel desde la aplicación principal con una cuenta de administrador.',
+            ], 403);
         }
 
         if (Auth::user()->rol !== 'admin') {
             Auth::logout();
-            return redirect()->route('admin.login')->withErrors(['email' => 'Acceso restringido a administradores.']);
+            return response()->view('admin.acceso-denegado', [
+                'mensaje' => 'Tu cuenta no tiene permisos de administrador.',
+            ], 403);
         }
 
         return $next($request);

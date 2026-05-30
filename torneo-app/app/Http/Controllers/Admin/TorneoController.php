@@ -27,7 +27,7 @@ class TorneoController extends Controller
     public function index()
     {
         $torneos = Torneo::with('deporte', 'creadoPor:id,nombre')
-            ->withCount('jugadores')
+            ->withCount('equipos')
             ->orderByDesc('created_at')
             ->paginate(15);
 

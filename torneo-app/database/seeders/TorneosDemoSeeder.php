@@ -25,8 +25,9 @@ class TorneosDemoSeeder extends Seeder
     // -------------------------------------------------------------------------
     // Helper: crea 8 equipos para un torneo cogiendo los usuarios con mayor ELO
     // (excluye al creador). Devuelve [seed => equipo_id].
+    // $bloqueadoSeeds: semillas que deben tener bloqueado = true.
     // -------------------------------------------------------------------------
-    private function crearEquipos(int $torneoId, array $nombres, int $excluirId): array
+    private function crearEquipos(int $torneoId, array $nombres, int $excluirId, array $bloqueadoSeeds = []): array
     {
         $participantes = DB::table('usuarios')
             ->where('id', '!=', $excluirId)
@@ -37,11 +38,14 @@ class TorneosDemoSeeder extends Seeder
         $seedToId = [];
         foreach ($participantes as $i => $u) {
             $seed = $i + 1;
+            $bloqueado = in_array($seed, $bloqueadoSeeds);
             $eqId = DB::table('equipos')->insertGetId([
                 'torneo_id'  => $torneoId,
                 'nombre'     => $nombres[$i],
                 'capitan_id' => $u->id,
                 'semilla'    => $seed,
+                'bloqueado'  => $bloqueado,
+                'inscrito'   => $bloqueado,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -82,6 +86,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
+        // Seeds 1, 3, 5 bloqueados: esos equipos cerraron sus inscripciones
         $this->crearEquipos($torneoId, [
             'Valencia Tigers',
             'Sun Kings',
@@ -91,7 +96,7 @@ class TorneosDemoSeeder extends Seeder
             'Blue Waves',
             'Orange Crush',
             'Valencia Rovers',
-        ], $creadorId);
+        ], $creadorId, [1, 3, 5]);
 
         // Sin partidos: el bracket se genera cuando el torneo empiece
     }
@@ -120,6 +125,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
+        // Torneo en curso: todos los equipos bloqueados (nadie puede unirse ya)
         $s = $this->crearEquipos($torneoId, [
             'Riverside Lions',
             'River Stars',
@@ -129,7 +135,7 @@ class TorneosDemoSeeder extends Seeder
             'Rapid City',
             'Riverdale FC',
             'Bayou Squad',
-        ], $creadorId);
+        ], $creadorId, [1, 2, 3, 4, 5, 6, 7, 8]);
 
         // Ronda 1 (Cuartos) — bracket 1v8, 4v5, 3v6, 2v7, todos finalizados
         $cuartos = [
@@ -210,6 +216,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
+        // Torneo finalizado: todos bloqueados
         $s = $this->crearEquipos($torneoId, [
             'Highland Thunder',
             'Glen Blaze',
@@ -219,7 +226,7 @@ class TorneosDemoSeeder extends Seeder
             'Loch Stars',
             'Thistle United',
             'Brae Rovers',
-        ], $creadorId);
+        ], $creadorId, [1, 2, 3, 4, 5, 6, 7, 8]);
 
         // Ronda 1 (Cuartos) — todos finalizados
         $cuartos = [

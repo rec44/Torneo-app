@@ -156,7 +156,15 @@
 <div class="main-wrapper">
     <div class="topbar">
         <h6 class="mb-0 fw-semibold text-secondary">@yield('title', 'Dashboard')</h6>
-        <span class="text-muted small"><i class="bi bi-shield-check me-1 text-success"></i>Admin</span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small"><i class="bi bi-shield-check me-1 text-success"></i>Admin</span>
+            <form method="POST" action="{{ route('admin.logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-box-arrow-right me-1"></i>Salir
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="page-content">

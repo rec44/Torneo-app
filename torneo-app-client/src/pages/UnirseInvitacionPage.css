@@ -125,18 +125,28 @@
 
 /* ─── Auth section ───────────────────────────────── */
 
+.unirse-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
 .unirse-auth-hint {
   font-size: 14px;
   color: var(--text);
   margin: 0 0 16px;
+  text-align: center;
 }
 
 .unirse-auth-acciones {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 
   a {
+    display: flex;
     text-align: center;
     justify-content: center;
     width: 100%;

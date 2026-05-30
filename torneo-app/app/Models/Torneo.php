@@ -28,6 +28,7 @@ class Torneo extends Model
         'estado',
     ];
 
+    // Fechas como Carbon y numéricos como int para evitar comparaciones raras
     protected function casts(): array
     {
         return [
@@ -41,26 +42,31 @@ class Torneo extends Model
         ];
     }
 
+    // Deporte al que pertenece el torneo
     public function deporte(): BelongsTo
     {
         return $this->belongsTo(Deporte::class, 'deporte_id');
     }
 
+    // Usuario que creó el torneo
     public function creadoPor(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'creado_por');
     }
 
+    // Equipos inscritos en el torneo
     public function equipos(): HasMany
     {
         return $this->hasMany(Equipo::class, 'torneo_id');
     }
 
+    // Partidos generados para el torneo
     public function partidos(): HasMany
     {
         return $this->hasMany(Partido::class, 'torneo_id');
     }
 
+    // Códigos de invitación emitidos para el torneo
     public function invitaciones(): HasMany
     {
         return $this->hasMany(InvitacionTorneo::class, 'torneo_id');

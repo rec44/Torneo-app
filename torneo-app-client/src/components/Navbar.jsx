@@ -14,7 +14,7 @@ export function Navbar() {
   return (
     <nav className="navbar">
       <NavLink to="/torneos" className="navbar-brand">
-        TorneoApp
+        RiseCup
       </NavLink>
 
       <div className="navbar-links">
@@ -38,6 +38,16 @@ export function Navbar() {
       <div className="navbar-user">
         {user ? (
           <>
+            {user.rol === 'admin' && (
+              <a
+                href={`http://localhost:8000/admin/auth?token=${localStorage.getItem('token') ?? ''}`}
+                className="navbar-btn-admin"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Admin
+              </a>
+            )}
             <span className="navbar-username">{user.nombre}</span>
             <button className="navbar-btn-logout" onClick={handleLogout}>
               Salir

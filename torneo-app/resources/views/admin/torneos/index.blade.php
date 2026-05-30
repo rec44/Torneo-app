@@ -39,7 +39,7 @@
                         </td>
                         <td>
                             <span class="badge bg-light text-dark border">
-                                {{ $torneo->jugadores_count }}/{{ $torneo->max_jugadores }}
+                                {{ $torneo->equipos_count }}/{{ $torneo->max_jugadores }}
                             </span>
                         </td>
                         <td class="text-muted small">
