@@ -21,6 +21,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('deportes', DeporteController::class);
         Route::resource('usuarios', UsuarioController::class);
+        Route::post('usuarios/{id}/desbanear', [UsuarioController::class, 'desbanear'])->name('usuarios.desbanear');
         Route::resource('torneos',  TorneoController::class);
     });
 });

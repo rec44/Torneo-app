@@ -19,6 +19,8 @@ class Partido extends Model
         'ganador_equipo_id',
         'resultado_e1',
         'resultado_e2',
+        'delta_elo_e1',
+        'delta_elo_e2',
         'estado',
         'ronda',
         'programado_en',
@@ -50,5 +52,10 @@ class Partido extends Model
     public function ganadorEquipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class, 'ganador_equipo_id');
+    }
+
+    public function historialElo(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HistorialElo::class, 'partido_id');
     }
 }

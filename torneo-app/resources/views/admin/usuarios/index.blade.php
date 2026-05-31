@@ -39,21 +39,33 @@
                             @else
                                 <span class="badge bg-secondary">User</span>
                             @endif
+                            @if($usuario->trashed())
+                                <span class="badge bg-dark ms-1">Baneado</span>
+                            @endif
                         </td>
                         <td class="text-muted small">{{ $usuario->created_at->format('d/m/Y') }}</td>
                         <td class="text-end">
-                            <a href="{{ route('admin.usuarios.edit', $usuario) }}"
-                               class="btn btn-sm btn-outline-secondary me-1">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form method="POST" action="{{ route('admin.usuarios.destroy', $usuario) }}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('¿Eliminar al usuario «{{ $usuario->nombre }}»?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
+                            @if(!$usuario->trashed())
+                                <a href="{{ route('admin.usuarios.edit', $usuario) }}"
+                                   class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                    data-action="{{ route('admin.usuarios.destroy', $usuario) }}"
+                                    data-nombre="{{ $usuario->nombre }}">
+                                    <i class="bi bi-slash-circle"></i> Banear
                                 </button>
-                            </form>
+                            @else
+                                <form method="POST"
+                                    action="{{ route('admin.usuarios.desbanear', $usuario->id) }}"
+                                    class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-check-circle"></i> Desbanear
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -68,5 +80,35 @@
         <div class="card-footer bg-white">{{ $usuarios->links() }}</div>
     @endif
 </div>
+
+
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3">
+                <h6 class="modal-title fw-semibold">¿Banear usuario?</h6>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-3 py-2" style="font-size:.9rem">
+                <strong id="modalNombre"></strong> no podrá iniciar sesión ni crear torneos. Podrás desbanearlo en cualquier momento.
+            </div>
+            <div class="modal-footer py-2 px-3 gap-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" class="m-0">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-sm btn-danger">Sí, banear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('modalEliminar').addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget
+    document.getElementById('modalNombre').textContent = btn.dataset.nombre
+    document.getElementById('formEliminar').action = btn.dataset.action
+})
+</script>
 
 @endsection

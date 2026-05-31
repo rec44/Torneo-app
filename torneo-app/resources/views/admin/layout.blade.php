@@ -103,7 +103,6 @@
         .badge-estado-abierto    { background-color: #d1fae5; color: #065f46; }
         .badge-estado-en_curso   { background-color: #dbeafe; color: #1e40af; }
         .badge-estado-finalizado { background-color: #f3f4f6; color: #374151; }
-        .badge-estado-cancelado  { background-color: #fee2e2; color: #991b1b; }
 
         .table th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
         .table td { vertical-align: middle; }

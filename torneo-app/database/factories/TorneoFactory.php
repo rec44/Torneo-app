@@ -26,7 +26,7 @@ class TorneoFactory extends Factory
             'fecha_inicio' => $fechaInicio,
             'fecha_fin'    => $this->faker->dateTimeBetween($fechaInicio, '+6 months'),
             'formato'      => 'eliminacion_simple',
-            'estado'       => $this->faker->randomElement(['abierto', 'en_curso', 'finalizado', 'cancelado']),
+            'estado'       => $this->faker->randomElement(['abierto', 'en_curso', 'finalizado']),
         ];
     }
 }

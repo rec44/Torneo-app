@@ -12,6 +12,7 @@ use App\Models\Torneo;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class EquipoController extends Controller
@@ -57,7 +58,16 @@ class EquipoController extends Controller
 
         // Se une como capitán si todavía no pertenece a ningún equipo del torneo
         if (! $yaEnEquipo) {
-            $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $usuario->elo]);
+            $elo = $this->eloEfectivo($usuario, $torneo);
+
+            if (! $esDueno) {
+                if ($msg = $this->mensajeEloInvalido($elo, $torneo)) {
+                    $equipo->delete();
+                    return response()->json(['message' => $msg], 422);
+                }
+            }
+
+            $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $elo]);
         }
 
         return response()->json(
@@ -151,7 +161,13 @@ class EquipoController extends Controller
             return response()->json(['message' => 'El equipo ya tiene el número máximo de miembros.'], 422);
         }
 
-        $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $usuario->elo]);
+        $elo = $this->eloEfectivo($usuario, $torneo);
+
+        if ($msg = $this->mensajeEloInvalido($elo, $torneo)) {
+            return response()->json(['message' => $msg], 422);
+        }
+
+        $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $elo]);
 
         if ($torneo->max_miembros && ($numMiembros + 1) >= $torneo->max_miembros) {
             $equipo->update(['bloqueado' => true, 'inscrito' => true]);
@@ -324,7 +340,13 @@ class EquipoController extends Controller
             return response()->json(['message' => 'El equipo ya tiene el número máximo de miembros.'], 422);
         }
 
-        $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $usuario->elo]);
+        $elo = $this->eloEfectivo($usuario, $torneo);
+
+        if ($msg = $this->mensajeEloInvalido($elo, $torneo)) {
+            return response()->json(['message' => $msg], 422);
+        }
+
+        $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $elo]);
         $invitacion->increment('usos_actuales');
 
         if ($torneo->max_miembros && ($numMiembros + 1) >= $torneo->max_miembros) {
@@ -335,5 +357,30 @@ class EquipoController extends Controller
             'message' => 'Te has unido al equipo mediante invitación.',
             'equipo'  => $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'),
         ]);
+    }
+
+    // Devuelve el ELO del usuario específico para el deporte del torneo.
+    // Si no tiene historial en ese deporte, usa el ELO global.
+    private function eloEfectivo(Usuario $usuario, Torneo $torneo): int
+    {
+        $eloDeporte = DB::table('elo_usuario_deporte')
+            ->where('usuario_id', $usuario->id)
+            ->where('deporte_id', $torneo->deporte_id)
+            ->value('elo');
+
+        return $eloDeporte ?? 500;
+    }
+
+    private function mensajeEloInvalido(int $elo, Torneo $torneo): ?string
+    {
+        if ($torneo->elo_minimo !== null && $elo < $torneo->elo_minimo) {
+            return "Tu ELO en este deporte ({$elo}) es inferior al mínimo requerido ({$torneo->elo_minimo}).";
+        }
+
+        if ($torneo->elo_maximo !== null && $elo > $torneo->elo_maximo) {
+            return "Tu ELO en este deporte ({$elo}) supera el máximo permitido ({$torneo->elo_maximo}).";
+        }
+
+        return null;
     }
 }

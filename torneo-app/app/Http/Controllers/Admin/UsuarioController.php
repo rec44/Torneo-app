@@ -10,7 +10,7 @@ class UsuarioController extends Controller
 {
     public function index()
     {
-        $usuarios = Usuario::orderBy('nombre')->paginate(20);
+        $usuarios = Usuario::withTrashed()->orderBy('nombre')->paginate(20);
         return view('admin.usuarios.index', compact('usuarios'));
     }
 
@@ -99,7 +99,15 @@ class UsuarioController extends Controller
 
     public function destroy(Usuario $usuario)
     {
+        $usuario->tokens()->delete();
         $usuario->delete();
-        return redirect()->route('admin.usuarios.index')->with('success', 'Usuario eliminado correctamente.');
+        return redirect()->route('admin.usuarios.index')->with('success', "Usuario \"{$usuario->nombre}\" baneado correctamente.");
+    }
+
+    public function desbanear(int $id)
+    {
+        $usuario = Usuario::withTrashed()->findOrFail($id);
+        $usuario->restore();
+        return redirect()->route('admin.usuarios.index')->with('success', "Usuario \"{$usuario->nombre}\" desbaneado correctamente.");
     }
 }

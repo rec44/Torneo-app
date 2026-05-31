@@ -21,7 +21,6 @@ class TorneoController extends Controller
         'abierto'    => 'Abierto',
         'en_curso'   => 'En curso',
         'finalizado' => 'Finalizado',
-        'cancelado'  => 'Cancelado',
     ];
 
     public function index()
@@ -69,6 +68,11 @@ class TorneoController extends Controller
 
     public function update(Request $request, Torneo $torneo)
     {
+        if ($torneo->estado === 'en_curso') {
+            return redirect()->route('admin.torneos.index')
+                ->with('error', 'No se puede editar un torneo en curso.');
+        }
+
         $request->validate($this->reglasValidacion(), $this->mensajesValidacion());
 
         $torneo->update($request->only([
@@ -91,7 +95,7 @@ class TorneoController extends Controller
             'fecha_inicio'  => 'required|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
             'formato'       => 'required|in:eliminacion_simple,eliminacion_doble,round_robin,suizo',
-            'estado'        => 'required|in:abierto,en_curso,finalizado,cancelado',
+            'estado'        => 'required|in:abierto,en_curso,finalizado',
         ];
     }
 
@@ -124,6 +128,11 @@ class TorneoController extends Controller
 
     public function destroy(Torneo $torneo)
     {
+        if ($torneo->estado === 'en_curso') {
+            return redirect()->route('admin.torneos.index')
+                ->with('error', 'No se puede eliminar un torneo en curso.');
+        }
+
         $torneo->delete();
         return redirect()->route('admin.torneos.index')->with('success', 'Torneo eliminado correctamente.');
     }

@@ -88,7 +88,8 @@ class PartidoController extends Controller
             return response()->json(['message' => 'El ganador debe ser uno de los equipos del partido.'], 422);
         }
 
-        $eraFinalizado = $partido->estado === 'finalizado';
+        $eraFinalizado   = $partido->estado === 'finalizado';
+        $ganadorAnterior = $partido->ganador_equipo_id;
 
         $partido->update([
             'resultado_e1'      => $data['resultado_e1'],
@@ -97,12 +98,25 @@ class PartidoController extends Controller
             'estado'            => 'finalizado',
         ]);
 
-        $fresco = $partido->fresh();
+        $fresco     = $partido->fresh();
+        $eloService = app(EloService::class);
+
         $this->procesarAvanceBracket($fresco);
 
-        // Solo aplica ELO la primera vez que se finaliza; editar no recalcula
-        if (! $eraFinalizado) {
-            app(EloService::class)->actualizarPorPartido($fresco);
+        if ($eraFinalizado && $ganadorAnterior !== (int) $data['ganador_equipo_id']) {
+            $eloService->revertirPorPartido($fresco, $ganadorAnterior);
+            $eloService->actualizarPorPartido($fresco);
+        } elseif (! $eraFinalizado) {
+            $eloService->actualizarPorPartido($fresco);
+        }
+
+        // Finalizar el torneo automáticamente si ya no quedan partidos pendientes
+        $hayPendientes = Partido::where('torneo_id', $torneo->id)
+            ->where('estado', '!=', 'finalizado')
+            ->exists();
+
+        if (! $hayPendientes) {
+            $torneo->update(['estado' => 'finalizado']);
         }
 
         return response()->json(

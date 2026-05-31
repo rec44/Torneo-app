@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Deporte;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DeporteController extends Controller
 {
@@ -22,13 +23,26 @@ class DeporteController extends Controller
     public function store(Request $request)
     {
         $request->validate(
-            ['nombre' => 'required|string|max:100|unique:deportes,nombre'],
+            [
+                'nombre' => [
+                    'required', 'string', 'max:100',
+                    Rule::unique('deportes', 'nombre')->whereNull('deleted_at'),
+                ],
+            ],
             [
                 'nombre.required' => 'El nombre del deporte es obligatorio.',
                 'nombre.max'      => 'El nombre no puede superar los 100 caracteres.',
                 'nombre.unique'   => 'Ya existe un deporte con ese nombre.',
             ]
         );
+
+        $trashed = Deporte::onlyTrashed()->where('nombre', $request->nombre)->first();
+
+        if ($trashed) {
+            $trashed->restore();
+            return redirect()->route('admin.deportes.index')
+                ->with('success', "Deporte \"{$request->nombre}\" restaurado correctamente.");
+        }
 
         Deporte::create($request->only('nombre'));
 

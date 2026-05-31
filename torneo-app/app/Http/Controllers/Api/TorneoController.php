@@ -19,9 +19,12 @@ class TorneoController extends Controller
             ->when(
                 $request->filled('estado'),
                 fn($q) => $q->where('estado', $request->estado),
-                fn($q) => $q->whereNotIn('estado', ['finalizado', 'cancelado'])
+                fn($q) => $q->where('estado', '!=', 'finalizado')
             )
-            ->when($request->deporte_id, fn($q, $v) => $q->where('deporte_id', $v))
+            ->when($request->deporte_id,   fn($q, $v) => $q->where('deporte_id', $v))
+            ->when($request->fecha_desde,  fn($q, $v) => $q->whereDate('fecha_inicio', '>=', $v))
+            ->when($request->fecha_hasta,  fn($q, $v) => $q->whereDate('fecha_inicio', '<=', $v))
+            ->orderBy('fecha_inicio', 'asc')
             ->paginate(15);
 
         return response()->json($torneos);
@@ -47,6 +50,7 @@ class TorneoController extends Controller
             'partidos.equipo1:id,nombre',
             'partidos.equipo2:id,nombre',
             'partidos.ganadorEquipo:id,nombre',
+            'partidos.historialElo:id,partido_id,usuario_id,elo_antes,elo_despues,delta',
         ]);
 
         return response()->json($torneo);
@@ -67,6 +71,10 @@ class TorneoController extends Controller
     {
         if ($request->user()->id !== $torneo->creado_por && $request->user()->rol !== 'admin') {
             return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        if ($torneo->estado === 'en_curso') {
+            return response()->json(['message' => 'No se puede eliminar un torneo en curso.'], 422);
         }
 
         $torneo->delete();

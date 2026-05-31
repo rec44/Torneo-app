@@ -17,6 +17,15 @@ class AuthController extends Controller
             'nombre'    => 'required|string|max:255',
             'email'     => 'required|email|unique:usuarios,email',
             'contrasena'=> 'required|string|min:8|confirmed',
+        ], [
+            'nombre.required'      => 'El nombre es obligatorio.',
+            'nombre.max'           => 'El nombre no puede superar los 255 caracteres.',
+            'email.required'       => 'El email es obligatorio.',
+            'email.email'          => 'El email no tiene un formato válido.',
+            'email.unique'         => 'Este email ya está registrado.',
+            'contrasena.required'  => 'La contraseña es obligatoria.',
+            'contrasena.min'       => 'La contraseña debe tener al menos 8 caracteres.',
+            'contrasena.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
         $usuario = Usuario::create([
@@ -38,6 +47,10 @@ class AuthController extends Controller
         $data = $request->validate([
             'email'     => 'required|email',
             'contrasena'=> 'required|string',
+        ], [
+            'email.required'      => 'El email es obligatorio.',
+            'email.email'         => 'El email no tiene un formato válido.',
+            'contrasena.required' => 'La contraseña es obligatoria.',
         ]);
 
         $usuario = Usuario::withTrashed()->where('email', $data['email'])->first();

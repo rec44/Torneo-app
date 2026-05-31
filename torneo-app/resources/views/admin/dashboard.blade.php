@@ -42,7 +42,7 @@
     <div class="card-body">
         {{-- Lista de estados posibles con su etiqueta legible --}}
         @php
-            $estados = ['abierto' => 'Abierto', 'en_curso' => 'En curso', 'finalizado' => 'Finalizado', 'cancelado' => 'Cancelado'];
+            $estados = ['abierto' => 'Abierto', 'en_curso' => 'En curso', 'finalizado' => 'Finalizado'];
         @endphp
         @foreach($estados as $clave => $etiqueta)
             {{-- Cantidad de torneos para este estado; si no existe en el array, se usa 0 --}}

@@ -46,18 +46,20 @@
                             {{ $torneo->fecha_inicio ? $torneo->fecha_inicio->format('d/m/Y') : '—' }}
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('admin.torneos.edit', $torneo) }}"
-                               class="btn btn-sm btn-outline-secondary me-1">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form method="POST" action="{{ route('admin.torneos.destroy', $torneo) }}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('¿Eliminar el torneo «{{ $torneo->nombre }}»?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
+                            @if($torneo->estado !== 'en_curso')
+                                <a href="{{ route('admin.torneos.edit', $torneo) }}"
+                                   class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                    data-action="{{ route('admin.torneos.destroy', $torneo) }}"
+                                    data-nombre="{{ $torneo->nombre }}">
                                     <i class="bi bi-trash"></i>
                                 </button>
-                            </form>
+                            @else
+                                <span class="text-muted small">En curso</span>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -72,5 +74,35 @@
         <div class="card-footer bg-white">{{ $torneos->links() }}</div>
     @endif
 </div>
+
+
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3">
+                <h6 class="modal-title fw-semibold">¿Eliminar torneo?</h6>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-3 py-2" style="font-size:.9rem">
+                Se eliminará <strong id="modalNombre"></strong> junto con todos sus datos. Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer py-2 px-3 gap-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" class="m-0">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-sm btn-danger">Sí, eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('modalEliminar').addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget
+    document.getElementById('modalNombre').textContent = btn.dataset.nombre
+    document.getElementById('formEliminar').action = btn.dataset.action
+})
+</script>
 
 @endsection

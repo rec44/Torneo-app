@@ -17,7 +17,22 @@ class UsuarioController extends Controller
     public function show(Usuario $usuario): JsonResponse
     {
         $usuario->load('elosDeporte.deporte', 'torneosCreados');
-        return response()->json($usuario);
+
+        // Torneos ganados: torneos finalizados donde el usuario era capitán del equipo ganador
+        $torneosGanados = \App\Models\Partido::where('estado', 'finalizado')
+            ->whereNotNull('ganador_equipo_id')
+            ->whereHas('ganadorEquipo', fn($q) => $q->where('capitan_id', $usuario->id))
+            ->whereHas('torneo', fn($q) => $q->where('estado', 'finalizado'))
+            ->select('torneo_id')
+            ->distinct()
+            ->count();
+
+        $data = $usuario->toArray();
+        $data['elosDeporte']    = $data['elos_deporte'] ?? [];
+        $data['torneos_ganados'] = $torneosGanados;
+        unset($data['elos_deporte']);
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Usuario $usuario): JsonResponse
