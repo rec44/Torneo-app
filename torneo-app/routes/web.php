@@ -12,7 +12,7 @@ Route::get('/', fn() => redirect()->route('admin.dashboard'));
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Puente: valida el token Sanctum de la app React y crea sesión admin
-    Route::get('auth', [AuthController::class, 'authViaBearerToken'])->name('auth');
+    Route::post('auth', [AuthController::class, 'authViaBearerToken'])->name('auth');
 
     Route::middleware('admin_auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');

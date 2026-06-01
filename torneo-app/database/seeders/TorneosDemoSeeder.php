@@ -82,6 +82,9 @@ class TorneosDemoSeeder extends Seeder
             'fecha_fin'     => now()->addDays(10)->toDateTimeString(),
             'formato'       => 'eliminacion_simple',
             'estado'        => 'abierto',
+            'direccion'     => 'Av. de l\'Integració 1, Pabellón Municipal',
+            'ciudad'        => 'Valencia',
+            'provincia'     => 'Valencia',
             'created_at'    => now(),
             'updated_at'    => now(),
         ]);
@@ -121,6 +124,9 @@ class TorneosDemoSeeder extends Seeder
             'fecha_fin'     => now()->addDays(5)->toDateTimeString(),
             'formato'       => 'eliminacion_simple',
             'estado'        => 'en_curso',
+            'direccion'     => 'C. Gambo 5, Club de Pádel Benidorm',
+            'ciudad'        => 'Benidorm',
+            'provincia'     => 'Alicante',
             'created_at'    => now(),
             'updated_at'    => now(),
         ]);
@@ -212,6 +218,9 @@ class TorneosDemoSeeder extends Seeder
             'fecha_fin'     => now()->subDay()->toDateTimeString(),
             'formato'       => 'eliminacion_simple',
             'estado'        => 'finalizado',
+            'direccion'     => 'Av. del País Valenciano 12, Polideportivo Municipal',
+            'ciudad'        => 'Altea la Vila',
+            'provincia'     => 'Alicante',
             'created_at'    => now(),
             'updated_at'    => now(),
         ]);

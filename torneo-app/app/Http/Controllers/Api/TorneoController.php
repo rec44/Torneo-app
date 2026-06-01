@@ -24,6 +24,8 @@ class TorneoController extends Controller
             ->when($request->deporte_id,   fn($q, $v) => $q->where('deporte_id', $v))
             ->when($request->fecha_desde,  fn($q, $v) => $q->whereDate('fecha_inicio', '>=', $v))
             ->when($request->fecha_hasta,  fn($q, $v) => $q->whereDate('fecha_inicio', '<=', $v))
+            ->when($request->elo_min,      fn($q, $v) => $q->where('elo_minimo', '>=', $v))
+            ->when($request->elo_max,      fn($q, $v) => $q->where('elo_maximo', '<=', $v))
             ->orderBy('fecha_inicio', 'asc')
             ->paginate(15);
 
@@ -58,6 +60,8 @@ class TorneoController extends Controller
 
     public function update(UpdateTorneoRequest $request, Torneo $torneo): JsonResponse
     {
+        $this->authorize('update', $torneo);
+
         if ($torneo->estado !== 'abierto') {
             return response()->json(['message' => 'Solo se puede editar un torneo abierto.'], 422);
         }
@@ -69,9 +73,7 @@ class TorneoController extends Controller
 
     public function destroy(Request $request, Torneo $torneo): JsonResponse
     {
-        if ($request->user()->id !== $torneo->creado_por && $request->user()->rol !== 'admin') {
-            return response()->json(['message' => 'No autorizado.'], 403);
-        }
+        $this->authorize('delete', $torneo);
 
         if ($torneo->estado === 'en_curso') {
             return response()->json(['message' => 'No se puede eliminar un torneo en curso.'], 422);
@@ -104,9 +106,7 @@ class TorneoController extends Controller
 
     public function iniciar(Request $request, Torneo $torneo): JsonResponse
     {
-        if ($request->user()->id !== $torneo->creado_por && $request->user()->rol !== 'admin') {
-            return response()->json(['message' => 'No autorizado.'], 403);
-        }
+        $this->authorize('iniciar', $torneo);
 
         if ($torneo->estado !== 'abierto') {
             return response()->json(['message' => 'El torneo no está en estado abierto.'], 422);

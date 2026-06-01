@@ -232,6 +232,13 @@ class EquipoController extends Controller
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
         }
 
+        $esDueno   = $request->user()->id === $torneo->creado_por || $request->user()->rol === 'admin';
+        $esCapitan = $request->user()->id === $equipo->capitan_id;
+
+        if (! $esDueno && ! $esCapitan) {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
         $data = $request->validated();
 
         $invitacion = InvitacionTorneo::create([

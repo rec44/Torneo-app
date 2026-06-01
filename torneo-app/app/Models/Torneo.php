@@ -26,6 +26,9 @@ class Torneo extends Model
         'fecha_fin',
         'formato',
         'estado',
+        'direccion',
+        'ciudad',
+        'provincia',
     ];
 
     // Fechas como Carbon y numéricos como int para evitar comparaciones raras

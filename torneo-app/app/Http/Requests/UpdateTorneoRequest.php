@@ -25,6 +25,9 @@ class UpdateTorneoRequest extends FormRequest
             'max_miembros'  => 'nullable|integer|min:1|gte:min_miembros',
             'fecha_inicio'  => 'nullable|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
+            'direccion'     => 'nullable|string|max:255',
+            'ciudad'        => 'nullable|string|max:100',
+            'provincia'     => 'nullable|string|max:100',
         ];
     }
 }

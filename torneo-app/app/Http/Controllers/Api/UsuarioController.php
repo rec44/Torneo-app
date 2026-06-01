@@ -16,9 +16,20 @@ class UsuarioController extends Controller
 
     public function show(Usuario $usuario): JsonResponse
     {
-        $usuario->load('elosDeporte.deporte', 'torneosCreados');
+        $usuario->load('elosDeporte.deporte');
 
-        // Torneos ganados: torneos finalizados donde el usuario era capitán del equipo ganador
+        $relacionTorneos = fn($q) => $q
+            ->with(['deporte', 'creadoPor:id,nombre'])
+            ->withCount(['equipos as equipos_count' => fn($q) => $q->where('bloqueado', true)]);
+
+        $torneosCreados = \App\Models\Torneo::where('creado_por', $usuario->id)
+            ->tap($relacionTorneos)
+            ->get();
+
+        $torneosInscritos = \App\Models\Torneo::whereHas('equipos', fn($q) =>
+            $q->whereHas('miembros', fn($q2) => $q2->where('usuarios.id', $usuario->id))
+        )->tap($relacionTorneos)->get();
+
         $torneosGanados = \App\Models\Partido::where('estado', 'finalizado')
             ->whereNotNull('ganador_equipo_id')
             ->whereHas('ganadorEquipo', fn($q) => $q->where('capitan_id', $usuario->id))
@@ -28,8 +39,10 @@ class UsuarioController extends Controller
             ->count();
 
         $data = $usuario->toArray();
-        $data['elosDeporte']    = $data['elos_deporte'] ?? [];
-        $data['torneos_ganados'] = $torneosGanados;
+        $data['elosDeporte']      = $data['elos_deporte'] ?? [];
+        $data['torneos_creados']  = $torneosCreados;
+        $data['torneos_inscritos'] = $torneosInscritos;
+        $data['torneos_ganados']  = $torneosGanados;
         unset($data['elos_deporte']);
 
         return response()->json($data);

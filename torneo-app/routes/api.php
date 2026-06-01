@@ -31,10 +31,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('deportes/{id}/restaurar', [DeporteController::class, 'restaurar']);
     });
 
-    // Usuarios
-    Route::apiResource('usuarios', UsuarioController::class)->except(['destroy']);
-    Route::delete('usuarios/{usuario}',    [UsuarioController::class, 'destroy']);
-    Route::post('usuarios/{id}/desbanear', [UsuarioController::class, 'desbanear']);
+    // Usuarios — lectura y edición propia (autenticado)
+    Route::get('usuarios/{usuario}',    [UsuarioController::class, 'show']);
+    Route::put('usuarios/{usuario}',    [UsuarioController::class, 'update']);
+    Route::patch('usuarios/{usuario}',  [UsuarioController::class, 'update']);
+
+    // Usuarios — gestión (solo admin)
+    Route::middleware('es_admin')->group(function () {
+        Route::get('usuarios',                        [UsuarioController::class, 'index']);
+        Route::delete('usuarios/{usuario}',           [UsuarioController::class, 'destroy']);
+        Route::post('usuarios/{id}/desbanear',        [UsuarioController::class, 'desbanear']);
+    });
 
     // Torneos (escritura)
     Route::get('mis-torneos', [TorneoController::class, 'misTorneos']);

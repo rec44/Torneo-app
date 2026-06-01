@@ -11,7 +11,7 @@ class AuthController extends Controller
 {
     public function authViaBearerToken(Request $request)
     {
-        $raw = $request->query('token');
+        $raw = $request->input('token');
 
         if (! $raw) {
             return $this->accesoDenegado('No se proporcionó credencial de acceso.');

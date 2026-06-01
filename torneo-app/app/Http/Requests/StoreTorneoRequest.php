@@ -24,6 +24,9 @@ class StoreTorneoRequest extends FormRequest
             'fecha_inicio'  => 'nullable|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
             'formato'       => 'required|in:eliminacion_simple,eliminacion_doble,round_robin,suizo',
+            'direccion'     => 'required|string|max:255',
+            'ciudad'        => 'required|string|max:100',
+            'provincia'     => 'required|string|max:100',
         ];
     }
 }
