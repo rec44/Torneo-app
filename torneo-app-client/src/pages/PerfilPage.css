@@ -1,8 +1,10 @@
 .perfil-page {
-  padding: 40px 32px 64px;
-  text-align: left;
+  width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 40px 32px 64px;
+  box-sizing: border-box;
+  text-align: left;
 
   @media (max-width: 768px) {
     padding: 24px 16px 48px;
@@ -17,8 +19,8 @@
   gap: 24px;
   padding: 28px 28px;
   background: var(--card-bg);
-  border: 1px solid var(--border);
   border-radius: 16px;
+  box-shadow: var(--card-shadow);
   margin-bottom: 16px;
 
   @media (max-width: 768px) {
@@ -52,9 +54,22 @@
 .perfil-header-badges {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 8px;
   flex-wrap: wrap;
+}
+
+.perfil-deporte-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+  letter-spacing: 0.02em;
 }
 
 .perfil-nombre {
@@ -81,8 +96,8 @@
   gap: 0;
   padding: 16px 28px;
   background: var(--card-bg);
-  border: 1px solid var(--border);
   border-radius: 12px;
+  box-shadow: var(--card-shadow);
   margin-bottom: 32px;
 
   @media (max-width: 480px) {
@@ -123,72 +138,27 @@
   flex-shrink: 0;
 }
 
-/* ─── Tabs ─────────────────────────────────────────────────── */
-
-.perfil-tabs {
-  display: flex;
-  gap: 2px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
-}
-
-.perfil-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 18px;
-  font-size: 14px;
-  font-family: var(--sans);
-  font-weight: 500;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-
-  &:hover { color: var(--text-h); }
-}
-
-.perfil-tab--activa {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
-.perfil-tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 99px;
-  background: var(--code-bg);
-  color: var(--text);
-}
-
-.perfil-tab--activa .perfil-tab-count {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-}
-
 /* ─── Secciones ─────────────────────────────────────────────── */
 
 .perfil-seccion {
   margin-bottom: 48px;
+  text-align: left;
 }
 
-.perfil-seccion-titulo {
+.perfil-seccion-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 16px;
+  width: 100%;
+}
+
+.perfil-seccion-titulo {
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-h);
-  margin: 0 0 20px;
+  margin: 0;
+  text-align: left;
 }
 
 .perfil-count {
@@ -210,26 +180,29 @@
   font-size: 15px;
 }
 
-/* ─── Scroll horizontal (torneos activos) ───────────────────── */
+/* ─── Scroll horizontal historial ──────────────────────────── */
 
-.torneos-scroll-h {
+.perfil-scroll-h {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 10px;
-  /* scrollbar fina */
+  padding-bottom: 12px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 
-  &::-webkit-scrollbar { height: 5px; }
+  &::-webkit-scrollbar       { height: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
-  /* Cards con ancho fijo para que no se encojan */
-  > * {
-    flex: 0 0 280px;
-    min-width: 0;
+  /* Cada card: ancho fijo para forzar el scroll */
+  > .torneo-card,
+  > .torneo-card--skeleton {
+    flex: 0 0 270px;
+    width: 270px;
+    min-width: 270px;
+    max-width: 270px;
   }
 }
 
@@ -287,9 +260,18 @@
 }
 
 .perfil-elo-global-label {
+  display: block;
   font-size: 14px;
   font-weight: 600;
   color: var(--accent);
+}
+
+.perfil-elo-global-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 2px;
+  opacity: 0.85;
 }
 
 .perfil-elo-global-valor {

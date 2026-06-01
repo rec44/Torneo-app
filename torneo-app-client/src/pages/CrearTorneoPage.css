@@ -1,8 +1,10 @@
 .crear-torneo-page {
-  padding: 40px 32px 64px;
+  padding: 36px 32px 80px;
+  background: var(--code-bg);
+  min-height: calc(100vh - 72px);
 
   @media (max-width: 768px) {
-    padding: 24px 16px 48px;
+    padding: 24px 16px 56px;
   }
 }
 
@@ -12,28 +14,17 @@
   text-align: left;
 }
 
-/* ─── Header ───────────────────────────────────────────────── */
-
-.crear-torneo-header {
-  margin-bottom: 32px;
-
-  h1 {
-    margin: 12px 0 6px;
-  }
-}
-
-.crear-torneo-subtitulo {
-  color: var(--text);
-  font-size: 15px;
-}
+/* ─── Back link ─────────────────────────────────────────────── */
 
 .btn-volver {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text);
   text-decoration: none;
+  margin-bottom: 28px;
   transition: color 0.15s;
 
   svg {
@@ -41,9 +32,44 @@
     height: 14px;
   }
 
-  &:hover {
-    color: var(--text-h);
-  }
+  &:hover { color: var(--accent); }
+}
+
+/* ─── Header ───────────────────────────────────────────────── */
+
+.crear-torneo-header {
+  margin-bottom: 32px;
+}
+
+.crear-torneo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+
+.crear-torneo-titulo {
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+  margin: 0 0 8px !important;
+  line-height: 1.15 !important;
+  color: var(--text-h);
+}
+
+.crear-torneo-subtitulo {
+  color: var(--text);
+  font-size: 15px;
+  margin: 0;
 }
 
 /* ─── Global error ─────────────────────────────────────────── */
@@ -68,14 +94,51 @@
 .crear-torneo-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 .form-section {
+  background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 24px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
   margin: 0;
+}
+
+.form-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.form-section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.form-section-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: 0.1px;
+}
+
+.form-section-body {
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -83,16 +146,6 @@
   @media (max-width: 600px) {
     padding: 16px;
   }
-}
-
-.form-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: var(--text);
-  padding: 0 4px;
-  margin-bottom: 4px;
 }
 
 /* ─── Fields ───────────────────────────────────────────────── */

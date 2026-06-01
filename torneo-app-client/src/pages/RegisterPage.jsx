@@ -27,8 +27,35 @@ export function RegisterPage() {
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: null }))
   }
 
+  const validar = () => {
+    const errs = {}
+    if (!form.nombre.trim())
+      errs.nombre = ['El nombre es obligatorio.']
+    else if (form.nombre.trim().length > 255)
+      errs.nombre = ['El nombre no puede superar los 255 caracteres.']
+
+    if (!form.email.trim())
+      errs.email = ['El email es obligatorio.']
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = ['El email no tiene un formato válido.']
+
+    if (!form.contrasena)
+      errs.contrasena = ['La contraseña es obligatoria.']
+    else if (form.contrasena.length < 8)
+      errs.contrasena = ['La contraseña debe tener al menos 8 caracteres.']
+    else if (form.contrasena !== form.contrasena_confirmation)
+      errs.contrasena = ['Las contraseñas no coinciden.']
+
+    return errs
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const errs = validar()
+    if (Object.keys(errs).length > 0) {
+      setErrores(errs)
+      return
+    }
     setCargando(true)
     setErrores({})
     setErrorGeneral(null)
@@ -51,7 +78,6 @@ export function RegisterPage() {
       <div className="auth-card">
         <div className="auth-card-header">
           <h2>Crear cuenta</h2>
-          <p className="auth-card-subtitulo">Únete para participar en torneos.</p>
         </div>
 
         {errorGeneral && <div className="auth-error-general">{errorGeneral}</div>}

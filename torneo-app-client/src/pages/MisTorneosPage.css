@@ -1,17 +1,94 @@
 .mis-torneos-page {
   padding: 40px 32px 64px;
-  text-align: left;
+  max-width: 1100px;
+  margin: 0 auto;
 
   @media (max-width: 768px) {
     padding: 24px 16px 48px;
   }
 }
 
-.mis-torneos-header {
-  margin-bottom: 40px;
+/* ─── Header ─────────────────────────────────────────────────── */
 
-  h1 { margin: 0; }
+.mis-torneos-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+  }
 }
+
+.mis-torneos-titulo {
+  margin: 0 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.mis-torneos-sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────── */
+
+.mis-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 36px;
+}
+
+.mis-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover { color: var(--text-h); }
+}
+
+.mis-tab--activo {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.mis-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 99px;
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.mis-tab--activo .mis-tab-count {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ─── Secciones ──────────────────────────────────────────────── */
 
 .mis-torneos-seccion {
   margin-bottom: 48px;
@@ -21,13 +98,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-h);
-  margin: 0 0 20px;
+  margin: 0 0 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.mis-torneos-count {
+.mis-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -39,9 +118,12 @@
   border-radius: 99px;
   background: var(--code-bg);
   color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .mis-torneos-vacio {
   color: var(--text);
-  font-size: 15px;
+  font-size: 14px;
+  padding: 24px 0;
 }

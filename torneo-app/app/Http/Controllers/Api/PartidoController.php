@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RegistrarResultadoRequest;
+use App\Http\Requests\UpdatePartidoRequest;
 use App\Models\Partido;
 use App\Services\EloService;
 use Illuminate\Http\JsonResponse;
@@ -37,7 +39,7 @@ class PartidoController extends Controller
         return response()->json($partido);
     }
 
-    public function update(Request $request, Partido $partido): JsonResponse
+    public function update(UpdatePartidoRequest $request, Partido $partido): JsonResponse
     {
         $user = $request->user();
         $esOrganizador = $user->id === $partido->torneo->creado_por || $user->rol === 'admin';
@@ -46,12 +48,7 @@ class PartidoController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $data = $request->validate([
-            'programado_en' => 'nullable|date',
-            'estado'        => 'sometimes|in:pendiente,en_curso,cancelado',
-        ]);
-
-        $partido->update($data);
+        $partido->update($request->validated());
 
         return response()->json($partido->fresh());
     }
@@ -67,7 +64,7 @@ class PartidoController extends Controller
         return response()->json(null, 204);
     }
 
-    public function registrarResultado(Request $request, Partido $partido): JsonResponse
+    public function registrarResultado(RegistrarResultadoRequest $request, Partido $partido): JsonResponse
     {
         $user   = $request->user();
         $torneo = $partido->torneo()->first();
@@ -77,11 +74,7 @@ class PartidoController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $data = $request->validate([
-            'resultado_e1'     => 'required|string|max:50',
-            'resultado_e2'     => 'required|string|max:50',
-            'ganador_equipo_id' => 'required|exists:equipos,id',
-        ]);
+        $data = $request->validated();
 
         if ($data['ganador_equipo_id'] !== $partido->equipo1_id
             && $data['ganador_equipo_id'] !== $partido->equipo2_id) {

@@ -36,5 +36,9 @@ export function useTorneo() {
     return torneoService.crearInvitacion(id, datos)
   }
 
-  return { torneo, loading, error, cargar, unirse, iniciar, crearInvitacion }
+  const eliminar = async (id) => {
+    return torneoService.delete(id)
+  }
+
+  return { torneo, loading, error, cargar, unirse, iniciar, crearInvitacion, eliminar }
 }

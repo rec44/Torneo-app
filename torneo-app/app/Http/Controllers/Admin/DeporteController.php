@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreDeporteRequest;
+use App\Http\Requests\Admin\UpdateDeporteRequest;
 use App\Models\Deporte;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class DeporteController extends Controller
 {
@@ -20,22 +20,8 @@ class DeporteController extends Controller
         return view('admin.deportes.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreDeporteRequest $request)
     {
-        $request->validate(
-            [
-                'nombre' => [
-                    'required', 'string', 'max:100',
-                    Rule::unique('deportes', 'nombre')->whereNull('deleted_at'),
-                ],
-            ],
-            [
-                'nombre.required' => 'El nombre del deporte es obligatorio.',
-                'nombre.max'      => 'El nombre no puede superar los 100 caracteres.',
-                'nombre.unique'   => 'Ya existe un deporte con ese nombre.',
-            ]
-        );
-
         $trashed = Deporte::onlyTrashed()->where('nombre', $request->nombre)->first();
 
         if ($trashed) {
@@ -54,17 +40,8 @@ class DeporteController extends Controller
         return view('admin.deportes.edit', compact('deporte'));
     }
 
-    public function update(Request $request, Deporte $deporte)
+    public function update(UpdateDeporteRequest $request, Deporte $deporte)
     {
-        $request->validate(
-            ['nombre' => 'required|string|max:100|unique:deportes,nombre,' . $deporte->id],
-            [
-                'nombre.required' => 'El nombre del deporte es obligatorio.',
-                'nombre.max'      => 'El nombre no puede superar los 100 caracteres.',
-                'nombre.unique'   => 'Ya existe un deporte con ese nombre.',
-            ]
-        );
-
         $deporte->update($request->only('nombre'));
 
         return redirect()->route('admin.deportes.index')->with('success', 'Deporte actualizado correctamente.');

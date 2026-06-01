@@ -44,7 +44,6 @@ export function LoginPage() {
       <div className="auth-card">
         <div className="auth-card-header">
           <h2>Iniciar sesión</h2>
-          <p className="auth-card-subtitulo">Accede a tu cuenta para gestionar torneos.</p>
         </div>
 
         {error && <div className="auth-error-general">{error}</div>}

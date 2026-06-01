@@ -9,7 +9,6 @@ const ESTADO_LABELS = {
   abierto: 'Abierto',
   en_curso: 'En curso',
   finalizado: 'Finalizado',
-  cancelado: 'Cancelado',
 }
 
 function formatFecha(fechaStr) {
@@ -47,11 +46,6 @@ export function TorneoCard({ torneo, onVerDetalle }) {
 
       <dl className="torneo-meta">
         <div className="torneo-meta-row">
-          <dt>Formato</dt>
-          <dd>{FORMATO_LABELS[torneo.formato] ?? torneo.formato}</dd>
-        </div>
-
-        <div className="torneo-meta-row">
           <dt>Equipos inscritos</dt>
           <dd>{torneo.equipos_count ?? 0} / {torneo.max_jugadores}</dd>
         </div>
@@ -71,6 +65,13 @@ export function TorneoCard({ torneo, onVerDetalle }) {
                   ? `Desde ${fechaInicio}`
                   : `Hasta ${fechaFin}`}
             </dd>
+          </div>
+        )}
+
+        {(torneo.ciudad || torneo.provincia) && (
+          <div className="torneo-meta-row">
+            <dt>Lugar</dt>
+            <dd>{[torneo.ciudad, torneo.provincia].filter(Boolean).join(', ')}</dd>
           </div>
         )}
 

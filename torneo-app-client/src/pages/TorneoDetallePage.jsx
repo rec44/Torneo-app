@@ -18,7 +18,6 @@ const ESTADO_LABELS = {
   abierto:    'Abierto',
   en_curso:   'En curso',
   finalizado: 'Finalizado',
-  cancelado:  'Cancelado',
 }
 
 const ESTADO_PARTIDO_LABELS = {
@@ -41,7 +40,7 @@ const TAB_LABELS = { bracket: 'Bracket', equipos: 'Equipos', mi_equipo: 'Mi equi
 export function TorneoDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { torneo, loading, error, cargar, iniciar } = useTorneo()
+  const { torneo, loading, error, cargar, iniciar, eliminar } = useTorneo()
   const { crearEquipo, unirse: unirseEquipo, actualizar: actualizarEquipo, unirsePorCodigo, getInvitacion, crearInvitacion, eliminar: eliminarEquipo, expulsarMiembro, toggleLock } = useEquipos()
   const { user } = useAuth()
 
@@ -55,7 +54,9 @@ export function TorneoDetallePage() {
   const [editandoId, setEditandoId] = useState(null)
   const [nombreEditar, setNombreEditar] = useState('')
 
-  const [confirmarIniciar, setConfirmarIniciar] = useState(false)
+  const [confirmarIniciar,       setConfirmarIniciar]       = useState(false)
+  const [confirmarEliminar,      setConfirmarEliminar]      = useState(null)
+  const [confirmarBorrarTorneo,  setConfirmarBorrarTorneo]  = useState(false)
 
   const [modalPartido,   setModalPartido]   = useState(null)
   const [invitacion,     setInvitacion]     = useState(null)
@@ -64,6 +65,13 @@ export function TorneoDetallePage() {
   const [accionError, setAccionError]   = useState(null)
   const [accionOk, setAccionOk]         = useState(null)
   const [copiadoOk, setCopiadoOk]       = useState(false)
+  const [expandidos, setExpandidos]     = useState(new Set())
+
+  const toggleExpandido = (id) => setExpandidos(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
 
   // Calculado antes de los guards para poder usarlo en effects
   const miEquipoPrev = torneo?.equipos?.find(e => e.miembros?.some(m => m.id === user?.id))
@@ -147,8 +155,11 @@ export function TorneoDetallePage() {
     setAccionError(null)
   }
 
-  const handleEliminarEquipo = async (equipo) => {
-    if (!window.confirm(`¿Eliminar el equipo "${equipo.nombre}"?`)) return
+  const handleEliminarEquipo = (equipo) => setConfirmarEliminar(equipo)
+
+  const confirmarEliminarEquipo = async () => {
+    const equipo = confirmarEliminar
+    setConfirmarEliminar(null)
     await withLoading(async () => {
       await eliminarEquipo(id, equipo.id)
       await cargar(id)
@@ -240,6 +251,13 @@ export function TorneoDetallePage() {
     })
   }
 
+  const handleEliminarTorneo = async () => {
+    await withLoading(async () => {
+      await eliminar(id)
+      navigate('/torneos')
+    })
+  }
+
   /* ── Datos ordenados + confirmación ──────────────────────── */
 
   const minMiembros = torneo.min_miembros ?? 1
@@ -261,16 +279,12 @@ export function TorneoDetallePage() {
   return (
     <div className="detalle-page">
       {/* Breadcrumb */}
-      <nav className="detalle-breadcrumb">
-        <button className="btn-volver" onClick={() => navigate(-1)}>
-          <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
-            <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Volver
-        </button>
-        <span className="breadcrumb-sep">/</span>
-        <span>{torneo.nombre}</span>
-      </nav>
+      <button className="btn-volver" onClick={() => navigate(-1)}>
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+          <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Volver
+      </button>
 
       {/* Header */}
       <header className="detalle-header">
@@ -284,23 +298,27 @@ export function TorneoDetallePage() {
             </span>
           </div>
           {esOrganizador && torneo.estado === 'abierto' && (
-            <Link to={`/torneos/${id}/editar`} className="btn-editar-torneo">
-              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="14" height="14">
-                <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"
-                  stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-              </svg>
-              Editar torneo
-            </Link>
+            <div className="detalle-header-acciones">
+              <Link to={`/torneos/${id}/editar`} className="btn-editar-torneo">
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="14" height="14">
+                  <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"
+                    stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                </svg>
+                Editar
+              </Link>
+              <button className="btn-eliminar-torneo" onClick={() => setConfirmarBorrarTorneo(true)}>
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="14" height="14">
+                  <path d="M3 4h10M6 4V2h4v2M5 4l.5 9h5l.5-9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Eliminar
+              </button>
+            </div>
           )}
         </div>
 
         <h1 className="detalle-titulo">{torneo.nombre}</h1>
 
         <dl className="detalle-meta">
-          <div className="detalle-meta-row">
-            <dt>Formato</dt>
-            <dd>{FORMATO_LABELS[torneo.formato] ?? torneo.formato}</dd>
-          </div>
           <div className="detalle-meta-row">
             <dt>Equipos</dt>
             <dd>
@@ -341,6 +359,15 @@ export function TorneoDetallePage() {
                   : formatFecha(torneo.fecha_inicio)
                     ? `Desde ${formatFecha(torneo.fecha_inicio)}`
                     : `Hasta ${formatFecha(torneo.fecha_fin)}`}
+              </dd>
+            </div>
+          )}
+          {(torneo.ciudad || torneo.provincia || torneo.direccion) && (
+            <div className="detalle-meta-row">
+              <dt>Lugar</dt>
+              <dd>
+                {[torneo.direccion, torneo.ciudad, torneo.provincia]
+                  .filter(Boolean).join(', ')}
               </dd>
             </div>
           )}
@@ -415,7 +442,6 @@ export function TorneoDetallePage() {
           >
             {TAB_LABELS[t]}
             {t === 'equipos'   && <span className="tab-count">{torneo.equipos?.length ?? 0}</span>}
-            {t === 'partidos'  && <span className="tab-count">{torneo.partidos?.length ?? 0}</span>}
             {t === 'mi_equipo' && <span className="tab-count">{miEquipo?.miembros?.length ?? 0}</span>}
           </button>
         ))}
@@ -428,7 +454,6 @@ export function TorneoDetallePage() {
         {tab === 'bracket' && (
           <BracketView
             partidos={partidosOrdenados}
-            formato={torneo.formato}
             esOrganizador={esOrganizador}
             onPartidoClick={setModalPartido}
           />
@@ -520,7 +545,7 @@ export function TorneoDetallePage() {
 
                       <div className="equipo-card-acciones">
                         <span className="equipo-capitan">Cap. {equipo.capitan?.nombre}</span>
-                        {esOrganizador && !estaEditando && (
+                        {esOrganizador && !estaEditando && torneo.estado === 'abierto' && (
                           <>
                             <button
                               className="btn-editar-equipo"
@@ -549,21 +574,12 @@ export function TorneoDetallePage() {
                       </div>
                     </div>
 
-                    {/* Miembros */}
-                    <div className="equipo-miembros">
-                      {equipo.miembros?.length === 0
-                        ? <span className="equipo-sin-miembros">Sin miembros aún</span>
-                        : equipo.miembros?.map(m => (
-                          <span key={m.id} className="equipo-miembro">
-                            <Link to={`/usuarios/${m.id}`} className="equipo-miembro-link">{m.nombre}</Link>
-                            <span className="miembro-elo">ELO {m.pivot?.elo_al_unirse ?? m.elo}</span>
-                          </span>
-                        ))
-                      }
-                    </div>
-
-                    {/* Contador de miembros */}
-                    <div className="equipo-limite">
+                    {/* Toggle miembros */}
+                    <button
+                      className="equipo-toggle-btn"
+                      onClick={() => toggleExpandido(equipo.id)}
+                      aria-expanded={expandidos.has(equipo.id)}
+                    >
                       <span className={
                         torneo.max_miembros && numMiembros >= torneo.max_miembros
                           ? 'equipo-limite--lleno'
@@ -573,10 +589,36 @@ export function TorneoDetallePage() {
                       }>
                         {numMiembros}
                         {torneo.max_miembros ? ` / ${torneo.max_miembros}` : ''} miembro{numMiembros !== 1 ? 's' : ''}
-                        {!confirmado && ` · Faltan ${minMiembros - numMiembros} para inscribirse`}
-                        {torneo.max_miembros && numMiembros >= torneo.max_miembros && ' · Equipo completo'}
+                        {!confirmado && ` · Faltan ${minMiembros - numMiembros}`}
+                        {torneo.max_miembros && numMiembros >= torneo.max_miembros && ' · Completo'}
                       </span>
-                    </div>
+                      <svg
+                        className={`equipo-toggle-chevron ${expandidos.has(equipo.id) ? 'equipo-toggle-chevron--abierto' : ''}`}
+                        viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true"
+                      >
+                        <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+
+                    {/* Miembros (desplegable) */}
+                    {expandidos.has(equipo.id) && (
+                      <div className="equipo-miembros">
+                        {numMiembros === 0
+                          ? <span className="equipo-sin-miembros">Sin miembros aún</span>
+                          : equipo.miembros?.map(m => (
+                            <div key={m.id} className="equipo-miembro">
+                              <span className="equipo-miembro-nombre">{m.nombre}</span>
+                              <span className="miembro-elo">
+                                {torneo.deporte?.nombre ?? 'Deporte'} · {m.pivot?.elo_al_unirse ?? m.elo} ELO
+                              </span>
+                              <Link to={`/usuarios/${m.id}`} className="equipo-miembro-perfil">
+                                Ver perfil
+                              </Link>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )}
 
                     {/* Botón unirse (usuario normal) */}
                     {puedoUnirme && !(torneo.max_miembros && equipo.miembros?.length >= torneo.max_miembros) && (
@@ -709,32 +751,168 @@ export function TorneoDetallePage() {
             {partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).length === 0 ? (
               <p className="detalle-vacio">No hay partidos jugados todavía.</p>
             ) : (
-              partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).map(p => (
-                <div key={p.id} className={`partido-fila partido-fila--${p.estado}`}>
-                  <span className="partido-ronda">R{p.ronda ?? '?'}</span>
-                  <div className="partido-enfrentamiento">
-                    <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : ''}>
-                      {p.equipo1?.nombre ?? 'TBD'}
-                    </span>
-                    <span className="partido-resultado">
-                      {p.estado === 'finalizado'
-                        ? `${p.resultado_e1} – ${p.resultado_e2}`
-                        : 'vs'}
-                    </span>
-                    <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : ''}>
-                      {p.equipo2?.nombre ?? 'TBD'}
-                    </span>
+              partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).map(p => {
+                const enEquipo1  = p.equipo1?.id === miEquipo?.id
+                const enEquipo2  = p.equipo2?.id === miEquipo?.id
+                const deltaPropio = enEquipo1 ? p.delta_elo_e1 : enEquipo2 ? p.delta_elo_e2 : null
+                const abierto    = expandidos.has(p.id)
+
+                // Buscar los equipos completos (con miembros) en torneo.equipos
+                const eq1 = (torneo.equipos ?? []).find(e => e.id === p.equipo1?.id)
+                const eq2 = (torneo.equipos ?? []).find(e => e.id === p.equipo2?.id)
+
+                return (
+                  <div key={p.id} className="partido-bloque">
+                    {/* Fila principal — clickable para expandir */}
+                    <div
+                      className={`partido-fila partido-fila--${p.estado} partido-fila--clickable`}
+                      onClick={() => toggleExpandido(p.id)}
+                      role="button"
+                      aria-expanded={abierto}
+                    >
+                      <span className="partido-ronda">R{p.ronda ?? '?'}</span>
+                      <div className="partido-enfrentamiento">
+                        <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : ''}>
+                          {p.equipo1?.nombre ?? 'TBD'}
+                        </span>
+                        <span className="partido-resultado">
+                          {p.resultado_e1} – {p.resultado_e2}
+                        </span>
+                        <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : ''}>
+                          {p.equipo2?.nombre ?? 'TBD'}
+                        </span>
+                      </div>
+                      <span className={`badge-partido-estado badge-partido-estado--${p.estado}`}>
+                        {ESTADO_PARTIDO_LABELS[p.estado] ?? p.estado}
+                      </span>
+                      {deltaPropio !== null && (
+                        <span className={`partido-delta ${deltaPropio >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                          {deltaPropio >= 0 ? '+' : ''}{deltaPropio} ELO
+                        </span>
+                      )}
+                      <svg className={`partido-chevron ${abierto ? 'partido-chevron--abierto' : ''}`}
+                        viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                        <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+
+                    {/* Panel expandido con miembros y ELO */}
+                    {abierto && (
+                      <div className="partido-detalle">
+                        {[
+                          { equipo: eq1 ?? p.equipo1, delta: p.delta_elo_e1, esGanador: p.ganador_equipo_id === p.equipo1?.id },
+                          { equipo: eq2 ?? p.equipo2, delta: p.delta_elo_e2, esGanador: p.ganador_equipo_id === p.equipo2?.id },
+                        ].map(({ equipo, delta, esGanador }) => equipo && (
+                          <div key={equipo.id} className="partido-detalle-equipo">
+                            <div className="partido-detalle-equipo-header">
+                              <span className={`partido-detalle-nombre ${esGanador ? 'partido-detalle-nombre--ganador' : ''}`}>
+                                {esGanador && '🏆 '}{equipo.nombre}
+                              </span>
+                              {delta !== null && (
+                                <span className={`partido-delta ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                  {delta >= 0 ? '+' : ''}{delta} ELO
+                                </span>
+                              )}
+                            </div>
+                            <div className="partido-detalle-miembros">
+                              {(equipo.miembros ?? []).map(m => {
+                                const snap = (p.historial_elo ?? []).find(h => h.usuario_id === m.id)
+                                return (
+                                  <div key={m.id} className="partido-detalle-miembro">
+                                    <span className="partido-detalle-miembro-nombre">{m.nombre}</span>
+                                    {snap ? (
+                                      <>
+                                        <span className="partido-detalle-elo-progresion">
+                                          {snap.elo_antes} → {snap.elo_despues}
+                                        </span>
+                                        <span className={`partido-delta partido-delta--sm ${snap.delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                          {snap.delta >= 0 ? '+' : ''}{snap.delta}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      delta !== null && (
+                                        <span className={`partido-delta partido-delta--sm ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                          {delta >= 0 ? '+' : ''}{delta} ELO
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                )
+                              })}
+                              {(!equipo.miembros || equipo.miembros.length === 0) && (
+                                <span className="partido-detalle-sin-miembros">Sin miembros registrados</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className={`badge-partido-estado badge-partido-estado--${p.estado}`}>
-                    {ESTADO_PARTIDO_LABELS[p.estado] ?? p.estado}
-                  </span>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         )}
 
       </div>
+
+      {confirmarBorrarTorneo && (
+        <div className="modal-overlay" onMouseDown={() => setConfirmarBorrarTorneo(false)}>
+          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-titulo">¿Eliminar torneo?</h3>
+              <button className="modal-cerrar" onClick={() => setConfirmarBorrarTorneo(false)} aria-label="Cerrar">
+                <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-form">
+              <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
+                Se eliminará el torneo <strong>{torneo.nombre}</strong> junto con todos sus equipos e inscripciones.
+                Esta acción no se puede deshacer.
+              </p>
+              <div className="modal-acciones">
+                <button className="btn-secondary" onClick={() => setConfirmarBorrarTorneo(false)} disabled={accionLoading}>
+                  Cancelar
+                </button>
+                <button className="btn-eliminar-confirm" onClick={async () => { setConfirmarBorrarTorneo(false); await handleEliminarTorneo() }} disabled={accionLoading}>
+                  {accionLoading ? 'Eliminando…' : 'Sí, eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmarEliminar && (
+        <div className="modal-overlay" onMouseDown={() => setConfirmarEliminar(null)}>
+          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-titulo">¿Eliminar equipo?</h3>
+              <button className="modal-cerrar" onClick={() => setConfirmarEliminar(null)} aria-label="Cerrar">
+                <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-form">
+              <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
+                Se eliminará el equipo <strong>{confirmarEliminar.nombre}</strong> y todos sus miembros
+                serán desinscritos. Esta acción no se puede deshacer.
+              </p>
+              <div className="modal-acciones">
+                <button className="btn-secondary" onClick={() => setConfirmarEliminar(null)} disabled={accionLoading}>
+                  Cancelar
+                </button>
+                <button className="btn-eliminar-confirm" onClick={confirmarEliminarEquipo} disabled={accionLoading}>
+                  {accionLoading ? 'Eliminando…' : 'Sí, eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmarIniciar && (
         <div className="modal-overlay" onMouseDown={() => setConfirmarIniciar(false)}>
