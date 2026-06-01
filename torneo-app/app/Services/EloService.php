@@ -77,8 +77,8 @@ class EloService
 
         if ($miembros1->isEmpty() || $miembros2->isEmpty()) return $null;
 
-        $eloTeam1 = $miembros1->avg('elo');
-        $eloTeam2 = $miembros2->avg('elo');
+        $eloTeam1 = $miembros1->avg(fn($m) => $m->pivot->elo_al_unirse);
+        $eloTeam2 = $miembros2->avg(fn($m) => $m->pivot->elo_al_unirse);
 
         $mediaEloTorneo = $this->mediaEloTorneo($partido->torneo_id);
         $maxRonda       = Partido::where('torneo_id', $partido->torneo_id)->max('ronda') ?? 1;
