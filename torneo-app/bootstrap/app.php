@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'auth'       => \App\Http\Middleware\Authenticate::class,
             'es_admin'   => \App\Http\Middleware\EsAdmin::class,
             'admin_auth' => \App\Http\Middleware\AdminAuth::class,
         ]);

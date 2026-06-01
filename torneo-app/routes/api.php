@@ -46,7 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Torneos (escritura)
     Route::get('mis-torneos', [TorneoController::class, 'misTorneos']);
     Route::apiResource('torneos', TorneoController::class)->only(['store', 'update', 'destroy']);
-    Route::post('torneos/{torneo}/iniciar', [TorneoController::class, 'iniciar']);
+    Route::post('torneos/{torneo}/iniciar',   [TorneoController::class, 'iniciar']);
+    Route::post('torneos/{torneo}/confirmar', [TorneoController::class, 'confirmar']);
 
     // Equipos
     Route::post('torneos/{torneo}/equipos',                              [EquipoController::class, 'store']);

@@ -41,7 +41,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect(config('app.frontend_url', 'http://localhost:5173'));
+        $url = config('app.frontend_url') ?: 'http://localhost:5173';
+
+        return redirect()->away($url);
     }
 
     private function accesoDenegado(string $mensaje)

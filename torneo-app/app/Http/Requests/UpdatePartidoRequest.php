@@ -14,7 +14,7 @@ class UpdatePartidoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'programado_en' => 'nullable|date',
+            'programado_en' => 'nullable|date|after_or_equal:today',
             'estado'        => 'sometimes|in:pendiente,en_curso,cancelado',
         ];
     }

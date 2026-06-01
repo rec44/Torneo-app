@@ -20,6 +20,66 @@ class TorneosDemoSeeder extends Seeder
         $this->torneo1_ValenciaCup();
         $this->torneo2_RiversideMasters();
         $this->torneo3_HighlandsOpen();
+        $this->torneo4_TeamCup();
+    }
+
+    // -------------------------------------------------------------------------
+    // Torneo 4 — Team Cup (abierto, 4 equipos de 2 miembros, todos bloqueados y completo)
+    // -------------------------------------------------------------------------
+    private function torneo4_TeamCup(): void
+    {
+        $creadorId = 1; // admin crea este torneo; así los demás usuarios quedan libres
+
+        $torneoId = DB::table('torneos')->insertGetId([
+            'nombre'        => 'Team Cup',
+            'deporte_id'    => 2,  // Baloncesto
+            'creado_por'    => $creadorId,
+            'elo_minimo'    => null,
+            'elo_maximo'    => null,
+            'max_jugadores' => 4,
+            'min_miembros'  => 2,
+            'max_miembros'  => 2,
+            'fecha_inicio'  => now()->addDays(5)->toDateTimeString(),
+            'fecha_fin'     => now()->addDays(12)->toDateTimeString(),
+            'formato'       => 'eliminacion_simple',
+            'estado'        => 'abierto',
+            'direccion'     => 'Calle Mayor 10, Pabellón Municipal',
+            'ciudad'        => 'Alicante',
+            'provincia'     => 'Alicante',
+            'created_at'    => now(),
+            'updated_at'    => now(),
+        ]);
+
+        // Coger 8 usuarios (excluir al admin=creador) con mayor ELO
+        $usuarios = DB::table('usuarios')
+            ->where('id', '!=', $creadorId)
+            ->orderByDesc('elo')
+            ->limit(8)
+            ->get(['id', 'elo']);
+
+        $nombresEquipos = ['Alpha Squad', 'Beta Force', 'Gamma Strike', 'Delta Unit'];
+
+        // Crear 4 equipos con 2 miembros cada uno, todos bloqueados (completos)
+        foreach ($nombresEquipos as $i => $nombre) {
+            $capitan  = $usuarios[$i * 2];
+            $miembro2 = $usuarios[$i * 2 + 1];
+
+            $eqId = DB::table('equipos')->insertGetId([
+                'torneo_id'  => $torneoId,
+                'nombre'     => $nombre,
+                'capitan_id' => $capitan->id,
+                'semilla'    => null,
+                'bloqueado'  => true,
+                'inscrito'   => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('equipo_usuarios')->insert([
+                ['equipo_id' => $eqId, 'usuario_id' => $capitan->id,  'elo_al_unirse' => $capitan->elo,  'created_at' => now(), 'updated_at' => now()],
+                ['equipo_id' => $eqId, 'usuario_id' => $miembro2->id, 'elo_al_unirse' => $miembro2->elo, 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
     }
 
     // -------------------------------------------------------------------------

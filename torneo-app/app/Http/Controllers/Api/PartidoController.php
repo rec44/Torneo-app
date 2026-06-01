@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrarResultadoRequest;
 use App\Http\Requests\UpdatePartidoRequest;
+use App\Mail\ResultadoRegistrado;
+use App\Mail\TorneoFinalizado;
 use App\Models\Partido;
 use App\Services\EloService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class PartidoController extends Controller
 {
@@ -48,7 +52,57 @@ class PartidoController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $partido->update($request->validated());
+        $data = $request->validated();
+
+        if (! empty($data['programado_en'])) {
+            $nuevaFecha = new \Carbon\Carbon($data['programado_en']);
+            $ronda      = $partido->ronda;
+            $torneoId   = $partido->torneo_id;
+            $maxRonda   = Partido::where('torneo_id', $torneoId)->max('ronda');
+
+            $labelRonda = match (true) {
+                $ronda === $maxRonda     => 'la final',
+                $ronda === $maxRonda - 1 => 'las semifinales',
+                $ronda === $maxRonda - 2 => 'los cuartos de final',
+                default                  => "la ronda {$ronda}",
+            };
+
+            if ($ronda > 1) {
+                $maxAnterior = Partido::where('torneo_id', $torneoId)
+                    ->where('ronda', $ronda - 1)
+                    ->whereNotNull('programado_en')
+                    ->max('programado_en');
+
+                if ($maxAnterior && $nuevaFecha->lt($maxAnterior)) {
+                    $labelAnterior = match (true) {
+                        $ronda - 1 === $maxRonda - 1 => 'las semifinales',
+                        $ronda - 1 === $maxRonda - 2 => 'los cuartos de final',
+                        default                      => "la ronda " . ($ronda - 1),
+                    };
+                    return response()->json([
+                        'message' => "La fecha de {$labelRonda} no puede ser anterior a {$labelAnterior}.",
+                    ], 422);
+                }
+            }
+
+            $minSiguiente = Partido::where('torneo_id', $torneoId)
+                ->where('ronda', $ronda + 1)
+                ->whereNotNull('programado_en')
+                ->min('programado_en');
+
+            if ($minSiguiente && $nuevaFecha->gt($minSiguiente)) {
+                $labelSiguiente = match (true) {
+                    $ronda + 1 === $maxRonda     => 'la final',
+                    $ronda + 1 === $maxRonda - 1 => 'las semifinales',
+                    default                      => "la ronda " . ($ronda + 1),
+                };
+                return response()->json([
+                    'message' => "La fecha de {$labelRonda} no puede ser posterior a {$labelSiguiente}.",
+                ], 422);
+            }
+        }
+
+        $partido->update($data);
 
         return response()->json($partido->fresh());
     }
@@ -72,6 +126,10 @@ class PartidoController extends Controller
 
         if (! $esOrganizador) {
             return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        if ($torneo->estado === 'programacion') {
+            return response()->json(['message' => 'No se pueden registrar resultados mientras el torneo está en fase de programación.'], 422);
         }
 
         $data = $request->validated();
@@ -103,6 +161,18 @@ class PartidoController extends Controller
             $eloService->actualizarPorPartido($fresco);
         }
 
+        // Email de resultado a los miembros de ambos equipos
+        $historial = $fresco->historialElo()->get()->keyBy('usuario_id');
+        foreach ([$fresco->equipo1, $fresco->equipo2] as $equipo) {
+            if (! $equipo) continue;
+            foreach ($equipo->miembros as $miembro) {
+                $delta = $historial[$miembro->id]->delta ?? 0;
+                Mail::to($miembro->email)->queue(
+                    new ResultadoRegistrado($fresco->load('torneo', 'equipo1', 'equipo2', 'ganadorEquipo'), $miembro->nombre, $delta)
+                );
+            }
+        }
+
         // Finalizar el torneo automáticamente si ya no quedan partidos pendientes
         $hayPendientes = Partido::where('torneo_id', $torneo->id)
             ->where('estado', '!=', 'finalizado')
@@ -110,6 +180,21 @@ class PartidoController extends Controller
 
         if (! $hayPendientes) {
             $torneo->update(['estado' => 'finalizado']);
+
+            // Email de torneo finalizado a todos los participantes
+            $campeon = $fresco->ganadorEquipo?->nombre ?? '—';
+            $torneo->load('deporte');
+            $participantes = DB::table('usuarios')
+                ->join('equipo_usuarios', 'usuarios.id', '=', 'equipo_usuarios.usuario_id')
+                ->join('equipos', 'equipo_usuarios.equipo_id', '=', 'equipos.id')
+                ->where('equipos.torneo_id', $torneo->id)
+                ->select('usuarios.email', 'usuarios.nombre')
+                ->distinct()
+                ->get();
+
+            foreach ($participantes as $u) {
+                Mail::to($u->email)->queue(new TorneoFinalizado($torneo, $u->nombre, $campeon));
+            }
         }
 
         return response()->json(

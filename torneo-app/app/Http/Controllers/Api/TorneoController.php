@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IniciarTorneoRequest;
 use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
+use App\Mail\TorneoIniciado;
+use App\Mail\TorneoFinalizado;
 use App\Models\Partido;
 use App\Models\Torneo;
+use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class TorneoController extends Controller
 {
@@ -112,12 +118,16 @@ class TorneoController extends Controller
             return response()->json(['message' => 'El torneo no está en estado abierto.'], 422);
         }
 
-        $todosEquipos = $torneo->equipos()->get();
-        $confirmados  = $todosEquipos->filter(fn($e) => $e->bloqueado);
+        $todosEquipos  = $torneo->equipos()->get();
+        $confirmados   = $todosEquipos->filter(fn($e) => $e->bloqueado);
         $noConfirmados = $todosEquipos->filter(fn($e) => ! $e->bloqueado);
 
-        if ($confirmados->isEmpty()) {
-            return response()->json(['message' => 'No hay equipos confirmados (bloqueados) para iniciar el torneo.'], 422);
+        $minEquipos = (int) floor($torneo->max_jugadores / 2) + 1;
+
+        if ($confirmados->count() < $minEquipos) {
+            return response()->json([
+                'message' => "Se necesitan al menos {$minEquipos} equipos confirmados para iniciar (más de la mitad de {$torneo->max_jugadores}). Ahora hay {$confirmados->count()}.",
+            ], 422);
         }
 
         foreach ($noConfirmados as $equipo) {
@@ -128,13 +138,17 @@ class TorneoController extends Controller
             $equipo->update(['semilla' => $index + 1]);
         });
 
-        $torneo->update(['estado' => 'en_curso']);
+        $torneo->update(['estado' => 'programacion']);
 
         if ($torneo->formato === 'eliminacion_simple') {
             $this->generarBracketEliminacionSimple($torneo, $confirmados->values());
         }
 
-        $mensaje = 'Torneo iniciado correctamente.';
+        foreach ($this->participantes($torneo) as $u) {
+            Mail::to($u->email)->queue(new TorneoIniciado($torneo->fresh()->load('deporte'), $u->nombre));
+        }
+
+        $mensaje = 'Bracket generado. Asigna fechas a los partidos en la pestaña Calendario y confirma el inicio.';
         if ($noConfirmados->isNotEmpty()) {
             $nombres  = $noConfirmados->pluck('nombre')->join(', ');
             $mensaje .= " Los siguientes equipos fueron retirados por no estar confirmados: {$nombres}.";
@@ -142,6 +156,30 @@ class TorneoController extends Controller
 
         return response()->json([
             'message' => $mensaje,
+            'torneo'  => $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo'),
+        ]);
+    }
+
+    public function confirmar(Torneo $torneo): JsonResponse
+    {
+        $this->authorize('iniciar', $torneo);
+
+        if ($torneo->estado !== 'programacion') {
+            return response()->json(['message' => 'El torneo no está en fase de programación.'], 422);
+        }
+
+        $sinFecha = $torneo->partidos()->whereNull('programado_en')->count();
+
+        if ($sinFecha > 0) {
+            return response()->json([
+                'message' => "Faltan fechas en {$sinFecha} partido(s). Asigna fecha y hora a todos antes de confirmar.",
+            ], 422);
+        }
+
+        $torneo->update(['estado' => 'en_curso']);
+
+        return response()->json([
+            'message' => 'Torneo en curso.',
             'torneo'  => $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo'),
         ]);
     }
@@ -176,7 +214,7 @@ class TorneoController extends Controller
                 'ganador_equipo_id' => $ganador?->id,
                 'estado'            => $esBye ? 'finalizado' : 'pendiente',
                 'ronda'             => 1,
-                'programado_en'     => now()->addDay(),
+                'programado_en'     => null,
             ]);
         }
 
@@ -188,7 +226,7 @@ class TorneoController extends Controller
                     'torneo_id'     => $torneo->id,
                     'estado'        => 'pendiente',
                     'ronda'         => $round,
-                    'programado_en' => now()->addDays($round),
+                    'programado_en' => null,
                 ]);
             }
         }
@@ -196,6 +234,17 @@ class TorneoController extends Controller
 
     // Genera el orden estándar de bracket para N slots (N debe ser potencia de 2).
     // Ej: N=8 → [1,8,5,4,3,6,7,2] → emparejamientos: 1v8, 5v4, 3v6, 7v2
+    private function participantes(Torneo $torneo)
+    {
+        return DB::table('usuarios')
+            ->join('equipo_usuarios', 'usuarios.id', '=', 'equipo_usuarios.usuario_id')
+            ->join('equipos', 'equipo_usuarios.equipo_id', '=', 'equipos.id')
+            ->where('equipos.torneo_id', $torneo->id)
+            ->select('usuarios.id', 'usuarios.email', 'usuarios.nombre')
+            ->distinct()
+            ->get();
+    }
+
     private function bracketOrder(int $n): array
     {
         if ($n === 1) return [1];

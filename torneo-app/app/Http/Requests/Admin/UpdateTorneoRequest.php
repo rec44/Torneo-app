@@ -23,7 +23,7 @@ class UpdateTorneoRequest extends FormRequest
             'fecha_inicio'  => 'required|date',
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
             'formato'       => 'required|in:eliminacion_simple,eliminacion_doble,round_robin,suizo',
-            'estado'        => 'required|in:abierto,en_curso,finalizado',
+            'estado'        => 'required|in:abierto,programacion,en_curso,finalizado',
         ];
     }
 
