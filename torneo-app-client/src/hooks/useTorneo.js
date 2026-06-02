@@ -32,6 +32,12 @@ export function useTorneo() {
     return result
   }
 
+  const confirmar = async (id) => {
+    const result = await torneoService.confirmar(id)
+    await cargar(id)
+    return result
+  }
+
   const crearInvitacion = async (id, datos) => {
     return torneoService.crearInvitacion(id, datos)
   }
@@ -40,5 +46,5 @@ export function useTorneo() {
     return torneoService.delete(id)
   }
 
-  return { torneo, loading, error, cargar, unirse, iniciar, crearInvitacion, eliminar }
+  return { torneo, loading, error, cargar, unirse, iniciar, confirmar, crearInvitacion, eliminar }
 }

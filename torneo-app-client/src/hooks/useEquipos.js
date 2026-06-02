@@ -19,8 +19,14 @@ export function useEquipos() {
     }
   }, [])
 
-  const crearEquipo = async (torneoId, nombre) => {
-    const data = await equipoService.create(torneoId, { nombre })
+  const crearEquipo = async (torneoId, nombre, escudo = null) => {
+    const data = await equipoService.create(torneoId, { nombre, ...(escudo ? { escudo } : {}) })
+    await cargar(torneoId)
+    return data
+  }
+
+  const subirEscudo = async (torneoId, equipoId, file) => {
+    const data = await equipoService.uploadEscudo(torneoId, equipoId, file)
     await cargar(torneoId)
     return data
   }
@@ -62,5 +68,5 @@ export function useEquipos() {
     return equipoService.toggleLock(torneoId, equipoId)
   }
 
-  return { equipos, loading, error, cargar, crearEquipo, unirse, actualizar, unirsePorCodigo, getInvitacion, crearInvitacion, eliminar, expulsarMiembro, toggleLock }
+  return { equipos, loading, error, cargar, crearEquipo, subirEscudo, unirse, actualizar, unirsePorCodigo, getInvitacion, crearInvitacion, eliminar, expulsarMiembro, toggleLock }
 }

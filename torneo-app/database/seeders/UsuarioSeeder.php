@@ -51,6 +51,6 @@ class UsuarioSeeder extends Seeder
             ['usuario_id' => $sergio->id, 'deporte_id' => 5, 'elo' => 480, 'created_at' => $now, 'updated_at' => $now], // Voleibol
         ]);
 
-        Usuario::factory(10)->create();
+        Usuario::factory(20)->create();
     }
 }

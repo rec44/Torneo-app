@@ -87,35 +87,45 @@ class TorneosDemoSeeder extends Seeder
     // (excluye al creador). Devuelve [seed => equipo_id].
     // $bloqueadoSeeds: semillas que deben tener bloqueado = true.
     // -------------------------------------------------------------------------
-    private function crearEquipos(int $torneoId, array $nombres, int $excluirId, array $bloqueadoSeeds = []): array
+    private function crearEquipos(int $torneoId, array $nombres, int $excluirId, array $bloqueadoSeeds = [], int $miembrosPorEquipo = 1): array
     {
+        $numEquipos    = count($nombres);
         $participantes = DB::table('usuarios')
             ->where('id', '!=', $excluirId)
             ->orderByDesc('elo')
-            ->limit(8)
+            ->limit($numEquipos * $miembrosPorEquipo)
             ->get(['id', 'elo']);
 
         $seedToId = [];
-        foreach ($participantes as $i => $u) {
-            $seed = $i + 1;
+        for ($i = 0; $i < $numEquipos; $i++) {
+            $capitan   = $participantes[$i * $miembrosPorEquipo];
+            $seed      = $i + 1;
             $bloqueado = in_array($seed, $bloqueadoSeeds);
+
             $eqId = DB::table('equipos')->insertGetId([
                 'torneo_id'  => $torneoId,
                 'nombre'     => $nombres[$i],
-                'capitan_id' => $u->id,
+                'capitan_id' => $capitan->id,
                 'semilla'    => $seed,
                 'bloqueado'  => $bloqueado,
                 'inscrito'   => $bloqueado,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            DB::table('equipo_usuarios')->insert([
-                'equipo_id'     => $eqId,
-                'usuario_id'    => $u->id,
-                'elo_al_unirse' => $u->elo,
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ]);
+
+            $inserts = [];
+            for ($j = 0; $j < $miembrosPorEquipo; $j++) {
+                $miembro   = $participantes[$i * $miembrosPorEquipo + $j];
+                $inserts[] = [
+                    'equipo_id'     => $eqId,
+                    'usuario_id'    => $miembro->id,
+                    'elo_al_unirse' => $miembro->elo,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ];
+            }
+            DB::table('equipo_usuarios')->insert($inserts);
+
             $seedToId[$seed] = $eqId;
         }
 
@@ -136,8 +146,8 @@ class TorneosDemoSeeder extends Seeder
             'elo_minimo'    => 400,
             'elo_maximo'    => 2000,
             'max_jugadores' => 8,
-            'min_miembros'  => 1,
-            'max_miembros'  => 1,
+            'min_miembros'  => 2,
+            'max_miembros'  => 2,
             'fecha_inicio'  => now()->addDays(2)->toDateTimeString(),
             'fecha_fin'     => now()->addDays(10)->toDateTimeString(),
             'formato'       => 'eliminacion_simple',
@@ -149,7 +159,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
-        // Seeds 1, 3, 5 bloqueados: esos equipos cerraron sus inscripciones
+        // Seeds 1, 2, 3, 5 bloqueados: esos equipos cerraron sus inscripciones
         $this->crearEquipos($torneoId, [
             'Valencia Tigers',
             'Sun Kings',
@@ -159,7 +169,7 @@ class TorneosDemoSeeder extends Seeder
             'Blue Waves',
             'Orange Crush',
             'Valencia Rovers',
-        ], $creadorId, [1, 3, 5]);
+        ], $creadorId, [1, 2, 3, 5], 2);
 
         // Sin partidos: el bracket se genera cuando el torneo empiece
     }

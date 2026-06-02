@@ -17,12 +17,12 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!res1.trim() || !res2.trim()) { setError('Introduce los dos marcadores.'); return }
+    const n1 = parseInt(res1, 10)
+    const n2 = parseInt(res2, 10)
+    if (isNaN(n1) || isNaN(n2) || n1 < 0 || n2 < 0) { setError('Los marcadores deben ser números enteros positivos.'); return }
     if (!ganadorId) { setError('Selecciona el ganador.'); return }
 
-    const n1 = parseFloat(res1)
-    const n2 = parseFloat(res2)
-    if (!isNaN(n1) && !isNaN(n2) && n1 !== n2) {
+    if (n1 !== n2) {
       const ganadorCorrecto = n1 > n2 ? partido.equipo1?.id : partido.equipo2?.id
       if (ganadorId !== ganadorCorrecto) {
         setError('El ganador debe ser el equipo con mayor puntuación.')
@@ -34,8 +34,8 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
     setError(null)
     try {
       await partidoService.registrarResultado(partido.id, {
-        resultado_e1:      res1.trim(),
-        resultado_e2:      res2.trim(),
+        resultado_e1:      parseInt(res1, 10),
+        resultado_e2:      parseInt(res2, 10),
         ganador_equipo_id: ganadorId,
       })
       onGuardado()
@@ -70,8 +70,8 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
               <span className="modal-score-nombre">{partido.equipo1?.nombre}</span>
               <input
                 className="modal-score-input"
-                type="text"
-                inputMode="numeric"
+                type="number"
+                min="0"
                 value={res1}
                 onChange={e => setRes1(e.target.value)}
                 placeholder="0"
@@ -86,8 +86,8 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
               <span className="modal-score-nombre">{partido.equipo2?.nombre}</span>
               <input
                 className="modal-score-input"
-                type="text"
-                inputMode="numeric"
+                type="number"
+                min="0"
                 value={res2}
                 onChange={e => setRes2(e.target.value)}
                 placeholder="0"

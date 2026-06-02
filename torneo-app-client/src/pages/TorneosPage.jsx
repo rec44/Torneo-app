@@ -137,13 +137,17 @@ export function TorneosPage() {
           <div className="sidebar-fechas">
             <div className="sidebar-fecha-campo">
               <label className="sidebar-fecha-label">Desde</label>
-              <input type="date" className="filtro-fecha"
-                value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+              <input type="date" className="filtro-fecha" lang="es"
+                value={fechaDesde}
+                max={fechaHasta || undefined}
+                onChange={e => setFechaDesde(e.target.value)} />
             </div>
             <div className="sidebar-fecha-campo">
               <label className="sidebar-fecha-label">Hasta</label>
-              <input type="date" className="filtro-fecha"
-                value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+              <input type="date" className="filtro-fecha" lang="es"
+                value={fechaHasta}
+                min={fechaDesde || undefined}
+                onChange={e => setFechaHasta(e.target.value)} />
             </div>
           </div>
         </div>
@@ -209,6 +213,8 @@ export function TorneosPage() {
               ...(filtroDeporte && { deporte_id:  filtroDeporte }),
               ...(fechaDesde    && { fecha_desde: fechaDesde }),
               ...(fechaHasta    && { fecha_hasta: fechaHasta }),
+              ...(eloMin        && { elo_min:     eloMin }),
+              ...(eloMax        && { elo_max:     eloMax }),
               page: p,
             })} />
         )}

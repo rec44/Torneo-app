@@ -1,11 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTorneo } from '../hooks/useTorneo'
 import { useEquipos } from '../hooks/useEquipos'
 import { useAuth } from '../hooks/useAuth'
 import { BracketView } from '../components/BracketView'
 import { ResultadoModal } from '../components/ResultadoModal'
+import { partidoService } from '../services/partidoService'
+import DatePicker, { registerLocale } from 'react-datepicker'
+import jsPDF from 'jspdf'
+import { es } from 'date-fns/locale/es'
+import 'react-datepicker/dist/react-datepicker.css'
 import './TorneoDetallePage.css'
+
+registerLocale('es', es)
 
 const FORMATO_LABELS = {
   eliminacion_simple: 'Eliminación directa',
@@ -15,9 +22,10 @@ const FORMATO_LABELS = {
 }
 
 const ESTADO_LABELS = {
-  abierto:    'Abierto',
-  en_curso:   'En curso',
-  finalizado: 'Finalizado',
+  abierto:       'Abierto',
+  programacion:  'Programación',
+  en_curso:      'En curso',
+  finalizado:    'Finalizado',
 }
 
 const ESTADO_PARTIDO_LABELS = {
@@ -34,14 +42,28 @@ function formatFecha(fechaStr) {
   })
 }
 
-const ALL_TABS   = ['bracket', 'mi_equipo', 'equipos', 'partidos']
-const TAB_LABELS = { bracket: 'Bracket', equipos: 'Equipos', mi_equipo: 'Mi equipo', partidos: 'Historial' }
+function formatFechaHora(fechaStr) {
+  if (!fechaStr) return null
+  return new Date(fechaStr).toLocaleString('es-ES', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
+
+function toDatetimeLocal(isoStr) {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const ALL_TABS   = ['bracket', 'calendario', 'mi_equipo', 'equipos', 'partidos']
+const TAB_LABELS = { bracket: 'Bracket', calendario: 'Calendario', equipos: 'Equipos', mi_equipo: 'Mi equipo', partidos: 'Historial' }
 
 export function TorneoDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { torneo, loading, error, cargar, iniciar, eliminar } = useTorneo()
-  const { crearEquipo, unirse: unirseEquipo, actualizar: actualizarEquipo, unirsePorCodigo, getInvitacion, crearInvitacion, eliminar: eliminarEquipo, expulsarMiembro, toggleLock } = useEquipos()
+  const { torneo, loading, error, cargar, iniciar, confirmar, eliminar } = useTorneo()
+  const { crearEquipo, subirEscudo, unirse: unirseEquipo, actualizar: actualizarEquipo, unirsePorCodigo, getInvitacion, crearInvitacion, eliminar: eliminarEquipo, expulsarMiembro, toggleLock } = useEquipos()
   const { user } = useAuth()
 
   const [tab, setTab] = useState('bracket')
@@ -49,15 +71,27 @@ export function TorneoDetallePage() {
   // Formulario crear equipo (usado tanto por usuario como por dueño)
   const [mostrarFormCrear, setMostrarFormCrear] = useState(false)
   const [nombreNuevo, setNombreNuevo] = useState('')
+  const [escudoNuevo, setEscudoNuevo] = useState(null)
+  const [escudoPreview, setEscudoPreview] = useState(null)
+  const [escudoCambiandoId, setEscudoCambiandoId] = useState(null)
 
   // Edición inline de un equipo (solo dueño)
   const [editandoId, setEditandoId] = useState(null)
   const [nombreEditar, setNombreEditar] = useState('')
 
   const [confirmarIniciar,       setConfirmarIniciar]       = useState(false)
+  const [confirmarConfirmar,     setConfirmarConfirmar]     = useState(false)
   const [confirmarEliminar,      setConfirmarEliminar]      = useState(null)
   const [confirmarBorrarTorneo,  setConfirmarBorrarTorneo]  = useState(false)
 
+  // Fechas locales de los partidos (partidoId → valor datetime-local)
+  const [fechasPartidos, setFechasPartidos] = useState({})
+  const [guardandoFecha, setGuardandoFecha] = useState({})
+  const [errorFecha, setErrorFecha]         = useState({})
+  const [generandoPDF, setGenerandoPDF]     = useState(false)
+  const [diaSeleccionado, setDiaSeleccionado] = useState(null)
+
+  const [modalFecha,     setModalFecha]     = useState(null) // partido al que se edita la fecha
   const [modalPartido,   setModalPartido]   = useState(null)
   const [invitacion,     setInvitacion]     = useState(null)
 
@@ -77,6 +111,23 @@ export function TorneoDetallePage() {
   const miEquipoPrev = torneo?.equipos?.find(e => e.miembros?.some(m => m.id === user?.id))
 
   useEffect(() => { cargar(id) }, [id, cargar])
+
+  useEffect(() => {
+    if (!torneo?.partidos) return
+    const map = {}
+    torneo.partidos.forEach(p => { map[p.id] = toDatetimeLocal(p.programado_en) })
+    setFechasPartidos(map)
+  }, [torneo?.partidos])
+
+  useEffect(() => {
+    if (tab !== 'calendario' || !torneo?.partidos) return
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const proximo = torneo.partidos
+      .filter(p => p.programado_en && new Date(p.programado_en) >= hoy)
+      .sort((a, b) => new Date(a.programado_en) - new Date(b.programado_en))[0]
+    if (proximo) setDiaSeleccionado(new Date(proximo.programado_en))
+  }, [tab, torneo?.partidos])
 
   useEffect(() => {
     if (tab !== 'mi_equipo' || !miEquipoPrev) return
@@ -116,8 +167,22 @@ export function TorneoDetallePage() {
   const esCapitan     = miEquipo?.capitan?.id === user?.id
 
   const puedeIniciar     = esOrganizador && torneo.estado === 'abierto'
-  // Cualquier usuario (incluido el organizador) puede crear equipo si no está ya en uno
+  const enProgramacion   = torneo.estado === 'programacion'
+  const puedeConfirmar   = esOrganizador && enProgramacion
   const puedeCrearEquipo = user && !yaEnEquipo && torneo.estado === 'abierto'
+
+  const partidos            = torneo.partidos ?? []
+  const sinFechaCount       = partidos.filter(p => !p.programado_en && p.estado !== 'finalizado').length
+  const todasTienenFecha    = partidos.length > 0 && sinFechaCount === 0
+  const rondasUnicas        = [...new Set(partidos.map(p => p.ronda))].sort((a, b) => a - b)
+  const maxRonda            = rondasUnicas.at(-1) ?? 1
+
+  function labelRonda(r) {
+    if (r === maxRonda) return 'Final'
+    if (r === maxRonda - 1 && maxRonda > 1) return 'Semifinal'
+    if (r === maxRonda - 2 && maxRonda > 2) return 'Cuartos de final'
+    return `Ronda ${r}`
+  }
 
   const notify = (ok, err = null) => { setAccionOk(ok); setAccionError(err) }
 
@@ -132,20 +197,45 @@ export function TorneoDetallePage() {
 
   /* ── Handlers ─────────────────────────────────────────────── */
 
+  const handleEscudoChange = (e) => {
+    const file = e.target.files?.[0] ?? null
+    setEscudoNuevo(file)
+    setEscudoPreview(file ? URL.createObjectURL(file) : null)
+  }
+
+  const resetFormCrear = () => {
+    setNombreNuevo('')
+    setEscudoNuevo(null)
+    setEscudoPreview(null)
+    setMostrarFormCrear(false)
+  }
+
   const handleCrearEquipo = async (e) => {
     e.preventDefault()
     if (!nombreNuevo.trim()) return
     await withLoading(async () => {
-      await crearEquipo(id, nombreNuevo.trim())
+      await crearEquipo(id, nombreNuevo.trim(), escudoNuevo)
       await cargar(id)
       const msg = esOrganizador
         ? `Equipo "${nombreNuevo}" creado.`
         : `Equipo "${nombreNuevo}" creado. ¡Eres el capitán!`
       notify(msg)
-      setNombreNuevo('')
-      setMostrarFormCrear(false)
+      resetFormCrear()
       setTab('equipos')
     })
+  }
+
+  const handleCambiarEscudo = async (equipoId, file) => {
+    if (!file) return
+    setEscudoCambiandoId(equipoId)
+    try {
+      await subirEscudo(id, equipoId, file)
+      notify('Escudo actualizado correctamente.')
+    } catch (err) {
+      setAccionError(err.response?.data?.message ?? 'Error al subir el escudo.')
+    } finally {
+      setEscudoCambiandoId(null)
+    }
   }
 
   const handleIniciarEdicion = (equipo) => {
@@ -247,8 +337,198 @@ export function TorneoDetallePage() {
     await withLoading(async () => {
       const res = await iniciar(id)
       await cargar(id)
-      notify(res?.message ?? 'Torneo iniciado correctamente.')
+      notify(res?.message ?? 'Bracket generado. Ahora asigna fechas a los partidos.')
+      setTab('calendario')
     })
+  }
+
+  const handleConfirmar = async () => {
+    await withLoading(async () => {
+      const res = await confirmar(id)
+      await cargar(id)
+      notify(res?.message ?? 'Torneo en curso.')
+    })
+  }
+
+  const descargarCalendarioPDF = async () => {
+    setGenerandoPDF(true)
+    try {
+    const doc       = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const anchoPage = doc.internal.pageSize.getWidth()
+    const M         = 14
+    const anchoUtil = anchoPage - M * 2
+    let y = M
+
+    const nuevaPagina = (espacio = 12) => {
+      if (y + espacio > 278) { doc.addPage(); y = M }
+    }
+
+    const conFecha = partidos
+      .filter(p => p.programado_en)
+      .sort((a, b) => new Date(a.programado_en) - new Date(b.programado_en))
+
+    // ── Cabecera ──────────────────────────────────────────────────
+    doc.setFillColor(249, 115, 22)
+    doc.rect(0, 0, anchoPage, 26, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text(torneo.nombre, M, 12)
+    doc.setFontSize(8.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Calendario de partidos · ${torneo.deporte?.nombre ?? ''}`, M, 20)
+    y = 34
+
+    if (conFecha.length === 0) {
+      doc.setTextColor(100, 100, 100)
+      doc.setFontSize(10)
+      doc.text('No hay partidos con fecha asignada.', M, y)
+      doc.save(`${torneo.nombre.replace(/\s+/g, '_')}_calendario.pdf`)
+      return
+    }
+
+    // ── Grid de calendario por mes ────────────────────────────────
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+    const porMes = {}
+    conFecha.forEach(p => {
+      const d = new Date(p.programado_en)
+      const k = `${d.getFullYear()}-${d.getMonth()}`
+      if (!porMes[k]) porMes[k] = { año: d.getFullYear(), mes: d.getMonth(), dias: new Set() }
+      porMes[k].dias.add(d.getDate())
+    })
+
+    const dibujarMes = (año, mes, diasConPartido) => {
+      const cellW = anchoUtil / 7
+      const cellH = 9
+      nuevaPagina(75)
+
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(24, 21, 14)
+      doc.text(`${MESES[mes]} ${año}`, M + anchoUtil / 2, y + 5, { align: 'center' })
+      y += 10
+
+      const diasSemana = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+      diasSemana.forEach((d, i) => {
+        doc.setFontSize(7)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(160, 155, 148)
+        doc.text(d, M + i * cellW + cellW / 2, y + 4, { align: 'center' })
+      })
+      y += 7
+
+      doc.setDrawColor(232, 227, 219)
+      doc.setLineWidth(0.3)
+      doc.line(M, y, M + anchoUtil, y)
+      y += 1
+
+      const primerDia = (new Date(año, mes, 1).getDay() + 6) % 7
+      const totalDias = new Date(año, mes + 1, 0).getDate()
+      let dia = 1
+
+      for (let semana = 0; semana < 6 && dia <= totalDias; semana++) {
+        for (let dow = 0; dow < 7; dow++) {
+          if (semana === 0 && dow < primerDia) continue
+          if (dia > totalDias) break
+          const cx = M + dow * cellW + cellW / 2
+          const cy = y + cellH / 2
+          if (diasConPartido.has(dia)) {
+            doc.setFillColor(249, 115, 22)
+            doc.circle(cx, cy, 3.8, 'F')
+            doc.setTextColor(255, 255, 255)
+            doc.setFont('helvetica', 'bold')
+          } else {
+            doc.setTextColor(24, 21, 14)
+            doc.setFont('helvetica', 'normal')
+          }
+          doc.setFontSize(8.5)
+          doc.text(String(dia), cx, cy + 1, { align: 'center', baseline: 'middle' })
+          dia++
+        }
+        y += cellH
+      }
+      y += 6
+    }
+
+    Object.values(porMes)
+      .sort((a, b) => a.año !== b.año ? a.año - b.año : a.mes - b.mes)
+      .forEach(({ año, mes, dias }) => dibujarMes(año, mes, dias))
+
+    // ── Divisor ───────────────────────────────────────────────────
+    nuevaPagina(10)
+    doc.setDrawColor(232, 227, 219)
+    doc.setLineWidth(0.4)
+    doc.line(M, y, M + anchoUtil, y)
+    y += 8
+
+    // ── Lista de partidos por ronda ───────────────────────────────
+    rondasUnicas.forEach(ronda => {
+      const ps = conFecha.filter(p => p.ronda === ronda)
+      if (ps.length === 0) return
+
+      nuevaPagina(16)
+      doc.setFillColor(245, 244, 242)
+      doc.roundedRect(M, y, anchoUtil, 7.5, 1.5, 1.5, 'F')
+      doc.setTextColor(100, 95, 90)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text(labelRonda(ronda).toUpperCase(), M + 4, y + 5.2)
+      y += 11
+
+      ps.forEach(p => {
+        nuevaPagina(13)
+        const fecha    = new Date(p.programado_en)
+        const fechaStr = fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+        const horaStr  = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+        const eq1 = p.equipo1?.nombre ?? 'TBD'
+        const eq2 = p.equipo2?.nombre ?? 'TBD'
+
+        doc.setFillColor(249, 115, 22)
+        doc.rect(M, y + 1, 2, 8, 'F')
+        doc.setTextColor(24, 21, 14)
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${eq1}  vs  ${eq2}`, M + 6, y + 6)
+        doc.setTextColor(120, 115, 106)
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.text(`${fechaStr} · ${horaStr}`, M + 6, y + 10.5)
+        y += 14
+      })
+      y += 3
+    })
+
+    // ── Pie ───────────────────────────────────────────────────────
+    doc.setTextColor(200, 200, 200)
+    doc.setFontSize(7)
+    doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} · RiseCup`, M, 291)
+
+    doc.save(`${torneo.nombre.replace(/\s+/g, '_')}_calendario.pdf`)
+    } catch (err) {
+      console.error('Error generando PDF:', err)
+      setAccionError('Error al generar el PDF: ' + (err.message ?? 'Error desconocido'))
+    } finally {
+      setGenerandoPDF(false)
+    }
+  }
+
+  const handleGuardarFecha = async (partidoId) => {
+    const valorLocal = fechasPartidos[partidoId]
+    // fechasPartidos almacena hora local — convertir a UTC antes de enviar a la API
+    const valorUTC = valorLocal ? new Date(valorLocal).toISOString().slice(0, 16) : null
+    setGuardandoFecha(prev => ({ ...prev, [partidoId]: true }))
+    setErrorFecha(prev => ({ ...prev, [partidoId]: null }))
+    try {
+      await partidoService.actualizarFecha(partidoId, valorUTC)
+      await cargar(id)
+      const nuevaFecha = valorLocal ? new Date(valorLocal) : null
+      if (nuevaFecha) setDiaSeleccionado(nuevaFecha)
+      setModalFecha(null)
+    } catch (err) {
+      setErrorFecha(prev => ({ ...prev, [partidoId]: err.response?.data?.message ?? 'Error al guardar.' }))
+    } finally {
+      setGuardandoFecha(prev => ({ ...prev, [partidoId]: false }))
+    }
   }
 
   const handleEliminarTorneo = async () => {
@@ -270,9 +550,15 @@ export function TorneoDetallePage() {
   const equiposConfirmados  = equiposOrdenados.filter(e => e.bloqueado)
   const equiposIncompletos  = equiposOrdenados.filter(e => (e.miembros?.length ?? 0) < minMiembros)
   const hayIncompletos      = equiposIncompletos.length > 0
+  const minEquipos          = Math.floor((torneo.max_jugadores ?? 4) / 2) + 1
+  const cumpleMinimo        = equiposConfirmados.length >= minEquipos
   const partidosOrdenados = [...(torneo.partidos ?? [])].sort(
     (a, b) => (a.ronda ?? 0) - (b.ronda ?? 0)
   )
+
+  const partidosHistorial = [...(torneo.partidos ?? [])]
+    .filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null)
+    .sort((a, b) => (b.ronda ?? 0) - (a.ronda ?? 0))
 
   /* ── Render ───────────────────────────────────────────────── */
 
@@ -399,10 +685,16 @@ export function TorneoDetallePage() {
               value={nombreNuevo} onChange={e => setNombreNuevo(e.target.value)}
               maxLength={100} required
             />
+            <label className="btn-secondary escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
+              {escudoPreview
+                ? <img src={escudoPreview} alt="preview" className="escudo-preview-mini" />
+                : '🖼 Escudo'}
+              <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleEscudoChange} />
+            </label>
             <button type="submit" className="btn-primary" disabled={accionLoading}>
               {accionLoading ? 'Creando…' : 'Crear'}
             </button>
-            <button type="button" className="btn-secondary" onClick={() => setMostrarFormCrear(false)}>
+            <button type="button" className="btn-secondary" onClick={resetFormCrear}>
               Cancelar
             </button>
           </form>
@@ -411,10 +703,43 @@ export function TorneoDetallePage() {
         {accionError && <p className="detalle-accion-error">{accionError}</p>}
         {accionOk    && <p className="detalle-accion-ok">{accionOk}</p>}
 
+        {/* Confirmar inicio — cuando ya se han asignado las fechas */}
+        {puedeConfirmar && (
+          <div className="detalle-acciones-iniciar">
+            {!todasTienenFecha && (
+              <p className="iniciar-advertencia">
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                  <path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M8 7v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                Faltan fechas en {sinFechaCount} partido{sinFechaCount !== 1 ? 's' : ''}.
+                Asígnalas en la pestaña <strong>Calendario</strong>.
+              </p>
+            )}
+            <button
+              className="btn-iniciar"
+              onClick={() => setConfirmarConfirmar(true)}
+              disabled={!todasTienenFecha || accionLoading}
+            >
+              {todasTienenFecha ? 'Confirmar inicio del torneo' : `Faltan ${sinFechaCount} fecha${sinFechaCount !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        )}
+
         {/* Acción iniciar torneo — separada visualmente */}
         {puedeIniciar && (
           <div className="detalle-acciones-iniciar">
-            {hayIncompletos && (
+            {!cumpleMinimo && (
+              <p className="iniciar-advertencia">
+                <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                  <path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M8 7v3M8 11.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                Se necesitan al menos <strong>{minEquipos} equipos confirmados</strong> para iniciar.
+                Ahora hay {equiposConfirmados.length}.
+              </p>
+            )}
+            {cumpleMinimo && hayIncompletos && (
               <p className="iniciar-advertencia">
                 <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
                   <path d="M8 2L14.5 13.5H1.5L8 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
@@ -422,12 +747,15 @@ export function TorneoDetallePage() {
                 </svg>
                 {equiposIncompletos.length} equipo{equiposIncompletos.length !== 1 ? 's' : ''} sin completar
                 ({equiposIncompletos.map(e => e.nombre).join(', ')})
-                {' '}será{equiposIncompletos.length !== 1 ? 'n' : ''} eliminado{equiposIncompletos.length !== 1 ? 's' : ''} al iniciar
-                por no alcanzar el mínimo de {minMiembros} miembro{minMiembros !== 1 ? 's' : ''}.
+                {' '}será{equiposIncompletos.length !== 1 ? 'n' : ''} eliminado{equiposIncompletos.length !== 1 ? 's' : ''} al iniciar.
               </p>
             )}
-            <button className="btn-iniciar" onClick={() => setConfirmarIniciar(true)} disabled={accionLoading}>
-              Iniciar torneo
+            <button
+              className="btn-iniciar"
+              onClick={() => setConfirmarIniciar(true)}
+              disabled={accionLoading || !cumpleMinimo}
+            >
+              {cumpleMinimo ? 'Iniciar torneo' : `Faltan ${minEquipos - equiposConfirmados.length} equipo${minEquipos - equiposConfirmados.length !== 1 ? 's' : ''}`}
             </button>
           </div>
         )}
@@ -435,7 +763,12 @@ export function TorneoDetallePage() {
 
       {/* Tabs */}
       <div className="detalle-tabs" role="tablist">
-        {ALL_TABS.filter(t => t !== 'mi_equipo' || yaEnEquipo).map(t => (
+        {ALL_TABS.filter(t => {
+          if (t === 'mi_equipo') return yaEnEquipo
+          if (t === 'bracket')   return torneo.estado !== 'abierto'
+          if (t === 'calendario') return torneo.estado !== 'abierto'
+          return true
+        }).map(t => (
           <button key={t} role="tab" aria-selected={tab === t}
             className={`detalle-tab ${tab === t ? 'detalle-tab--activo' : ''}`}
             onClick={() => setTab(t)}
@@ -456,7 +789,171 @@ export function TorneoDetallePage() {
             partidos={partidosOrdenados}
             esOrganizador={esOrganizador}
             onPartidoClick={setModalPartido}
+            torneoFinalizado={torneo.estado === 'finalizado'}
           />
+        )}
+
+        {/* ── CALENDARIO ───────────────────────────────────── */}
+        {tab === 'calendario' && (
+          <div className="calendario-tab">
+
+            <div className="calendario-toolbar">
+              {enProgramacion && esOrganizador && (
+                <p className="calendario-info" style={{ margin: 0, flex: 1 }}>
+                  Asigna fecha y hora a cada partido. Cuando todos tengan fecha podrás confirmar el inicio.
+                </p>
+              )}
+              {partidos.some(p => p.programado_en) && (
+                <button className="calendario-btn-pdf" onClick={descargarCalendarioPDF} disabled={generandoPDF}>
+                  {generandoPDF ? (
+                    <>Generando…</>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                        <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                      Descargar PDF
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {rondasUnicas.length === 0 ? (
+              <p className="detalle-vacio">No hay partidos generados todavía.</p>
+            ) : (
+              <div className="calendario-layout">
+
+                {/* ── Columna izquierda: calendario mensual ── */}
+                <div className="calendario-col-izq">
+                  <DatePicker
+                    inline
+                    selected={diaSeleccionado}
+                    onChange={date => setDiaSeleccionado(date)}
+                    onMonthChange={() => setDiaSeleccionado(null)}
+                    locale="es"
+                    highlightDates={partidos
+                      .filter(p => p.programado_en)
+                      .map(p => new Date(p.programado_en))
+                    }
+                    calendarClassName="calendario-datepicker-calendar calendario-inline"
+                  />
+                  <p className="calendario-leyenda">
+                    <span className="calendario-leyenda-dot" /> Días con partido
+                  </p>
+                </div>
+
+                {/* ── Columna derecha: partidos del día seleccionado ── */}
+                <div className="calendario-col-der">
+                  {!diaSeleccionado ? (
+                    <div className="calendario-placeholder">
+                      <svg viewBox="0 0 24 24" fill="none" width="32" height="32" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M3 9h18M8 2v2M16 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <p>Selecciona un día del calendario para ver sus partidos</p>
+                    </div>
+                  ) : (() => {
+                    const diaStr = diaSeleccionado.toDateString()
+                    const partidosDia = partidos
+                      .filter(p => p.programado_en && new Date(p.programado_en).toDateString() === diaStr)
+                      .sort((a, b) => new Date(a.programado_en) - new Date(b.programado_en))
+
+                    const puedeEditar = esOrganizador && (enProgramacion || torneo.estado === 'en_curso')
+
+                    return (
+                      <div className="calendario-dia-panel">
+                        <h3 className="calendario-dia-titulo">
+                          {diaSeleccionado.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </h3>
+
+                        {partidosDia.length === 0 ? (
+                          <div className="calendario-dia-vacio">
+                            <p>No hay partidos programados para este día.</p>
+                            {puedeEditar && <p className="calendario-dia-vacio-hint">Puedes asignar este día a un partido desde la lista de abajo.</p>}
+                          </div>
+                        ) : (
+                          partidosDia.map(partido => {
+                            const fechaLocal  = fechasPartidos[partido.id] ?? ''
+                            const guardando   = guardandoFecha[partido.id]
+                            const sinCambios  = fechaLocal === toDatetimeLocal(partido.programado_en)
+                            const fechaSel    = fechaLocal ? new Date(fechaLocal) : null
+                            const hora        = partido.programado_en
+                              ? new Date(partido.programado_en).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                              : null
+
+                            return (
+                              <div key={partido.id} className="calendario-dia-partido">
+                                <div className="calendario-dia-hora">{hora}</div>
+                                <div className="calendario-dia-info">
+                                  <span className="calendario-dia-ronda">{labelRonda(partido.ronda)}</span>
+                                  <div className="calendario-partido-equipos">
+                                    <span className="calendario-equipo">{partido.equipo1?.nombre ?? 'TBD'}</span>
+                                    <span className="calendario-vs">vs</span>
+                                    <span className="calendario-equipo">{partido.equipo2?.nombre ?? 'TBD'}</span>
+                                  </div>
+                                </div>
+                                {puedeEditar && (
+                                  <button
+                                    className="calendario-btn-editar"
+                                    onClick={() => setModalFecha(partido)}
+                                    title="Editar fecha"
+                                  >
+                                    <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                                      <path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                                    </svg>
+                                    Editar
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })
+                        )}
+
+                        {/* Partidos sin fecha — solo para organizador en programacion */}
+                        {puedeEditar && sinFechaCount > 0 && (
+                          <div className="calendario-sin-fecha-lista">
+                            <h4 className="calendario-sin-fecha-titulo">Sin fecha asignada ({sinFechaCount})</h4>
+                            {partidos.filter(p => !p.programado_en && p.estado !== 'finalizado').map(partido => {
+                              const fechaLocal = fechasPartidos[partido.id] ?? ''
+                              const guardando  = guardandoFecha[partido.id]
+                              const sinCambios = fechaLocal === toDatetimeLocal(partido.programado_en)
+                              const fechaSel   = fechaLocal ? new Date(fechaLocal) : null
+
+                              return (
+                                <div key={partido.id} className="calendario-dia-partido calendario-dia-partido--pendiente">
+                                  <div className="calendario-dia-info">
+                                    <span className="calendario-dia-ronda">{labelRonda(partido.ronda)}</span>
+                                    <div className="calendario-partido-equipos">
+                                      <span className="calendario-equipo">{partido.equipo1?.nombre ?? 'TBD'}</span>
+                                      <span className="calendario-vs">vs</span>
+                                      <span className="calendario-equipo">{partido.equipo2?.nombre ?? 'TBD'}</span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    className="calendario-btn-editar calendario-btn-editar--asignar"
+                                    onClick={() => setModalFecha(partido)}
+                                  >
+                                    <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                                      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                                      <path d="M2 7h12M5 1v2M11 1v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                                    </svg>
+                                    Asignar fecha
+                                  </button>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* ── EQUIPOS ──────────────────────────────────────── */}
@@ -480,11 +977,16 @@ export function TorneoDetallePage() {
                       value={nombreNuevo} onChange={e => setNombreNuevo(e.target.value)}
                       maxLength={100} autoFocus required
                     />
+                    <label className="btn-secondary escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
+                      {escudoPreview
+                        ? <img src={escudoPreview} alt="preview" className="escudo-preview-mini" />
+                        : '🖼 Escudo'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleEscudoChange} />
+                    </label>
                     <button type="submit" className="btn-primary" disabled={accionLoading}>
                       {accionLoading ? 'Creando…' : 'Crear'}
                     </button>
-                    <button type="button" className="btn-secondary"
-                      onClick={() => { setMostrarFormCrear(false); setNombreNuevo('') }}>
+                    <button type="button" className="btn-secondary" onClick={resetFormCrear}>
                       Cancelar
                     </button>
                   </form>
@@ -506,7 +1008,24 @@ export function TorneoDetallePage() {
                   <div key={equipo.id} className={`equipo-card ${esMiEquipo ? 'equipo-card--propio' : ''} ${equipo.bloqueado ? 'equipo-card--inscrito' : ''}`}>
                     {/* Cabecera del equipo */}
                     <div className="equipo-card-header">
-                      <div>
+                      <div className="equipo-card-header-left">
+                        {/* Escudo */}
+                        <div className="equipo-escudo-wrap">
+                          {equipo.escudo_url
+                            ? <img src={equipo.escudo_url} alt={`Escudo ${equipo.nombre}`} className="equipo-escudo" />
+                            : <div className="equipo-escudo equipo-escudo--placeholder" aria-hidden="true">🛡</div>
+                          }
+                          {(esMiEquipo || esOrganizador) && torneo.estado !== 'finalizado' && (
+                            <label className="equipo-escudo-cambiar" title="Cambiar escudo">
+                              {escudoCambiandoId === equipo.id ? '…' : '✎'}
+                              <input
+                                type="file" accept="image/jpeg,image/png,image/webp" hidden
+                                onChange={e => handleCambiarEscudo(equipo.id, e.target.files?.[0])}
+                              />
+                            </label>
+                          )}
+                        </div>
+                        <div>
                         {estaEditando ? (
                           <form className="equipo-editar-inline" onSubmit={handleGuardarEdicion}>
                             <input
@@ -541,6 +1060,7 @@ export function TorneoDetallePage() {
                             {esMiEquipo && <span className="badge-mi-equipo">Mi equipo</span>}
                           </>
                         )}
+                        </div>
                       </div>
 
                       <div className="equipo-card-acciones">
@@ -649,6 +1169,22 @@ export function TorneoDetallePage() {
             {/* Cabecera */}
             <div className="mi-equipo-header">
               <div className="mi-equipo-header-info">
+                <div className="equipo-escudo-wrap" style={{ marginRight: 12, flexShrink: 0 }}>
+                  {miEquipo.escudo_url
+                    ? <img src={miEquipo.escudo_url} alt={`Escudo ${miEquipo.nombre}`} className="equipo-escudo" />
+                    : <div className="equipo-escudo equipo-escudo--placeholder" aria-hidden="true">🛡</div>
+                  }
+                  {(esCapitan || esOrganizador) && torneo.estado !== 'finalizado' && (
+                    <label className="equipo-escudo-cambiar" title="Cambiar escudo">
+                      {escudoCambiandoId === miEquipo.id ? '…' : '✎'}
+                      <input
+                        type="file" accept="image/jpeg,image/png,image/webp" hidden
+                        onChange={e => handleCambiarEscudo(miEquipo.id, e.target.files?.[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div>
                 <h3 className="mi-equipo-nombre">{miEquipo.nombre}</h3>
                 {miEquipo.bloqueado && (
                   <span className="badge-inscrito-confirmado">
@@ -661,6 +1197,7 @@ export function TorneoDetallePage() {
                 {miEquipo.bloqueado && (
                   <span className="badge-bloqueado">Bloqueado</span>
                 )}
+                </div>
               </div>
               {(esCapitan || esOrganizador) && torneo.estado === 'abierto' && (
                 <button
@@ -748,10 +1285,10 @@ export function TorneoDetallePage() {
         {/* ── PARTIDOS ─────────────────────────────────────── */}
         {tab === 'partidos' && (
           <div className="partidos-historial">
-            {partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).length === 0 ? (
+            {partidosHistorial.length === 0 ? (
               <p className="detalle-vacio">No hay partidos jugados todavía.</p>
             ) : (
-              partidosOrdenados.filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null).map(p => {
+              partidosHistorial.map(p => {
                 const enEquipo1  = p.equipo1?.id === miEquipo?.id
                 const enEquipo2  = p.equipo2?.id === miEquipo?.id
                 const deltaPropio = enEquipo1 ? p.delta_elo_e1 : enEquipo2 ? p.delta_elo_e2 : null
@@ -927,11 +1464,11 @@ export function TorneoDetallePage() {
             </div>
             <div className="modal-form">
               <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
-                Se generará el bracket y el torneo pasará a <strong>En curso</strong>.
+                Se generará el bracket y el torneo pasará a fase de <strong>Programación</strong>.
+                Después podrás asignar fechas a cada partido y confirmar el inicio.
                 {hayIncompletos && (
                   <> Los equipos sin confirmar (<strong>{equiposIncompletos.map(e => e.nombre).join(', ')}</strong>) serán eliminados.</>
                 )}
-                {' '}Esta acción no se puede deshacer.
               </p>
               <div className="modal-acciones">
                 <button className="btn-secondary" onClick={() => setConfirmarIniciar(false)} disabled={accionLoading}>
@@ -943,6 +1480,102 @@ export function TorneoDetallePage() {
                   onClick={async () => { setConfirmarIniciar(false); await handleIniciar() }}
                 >
                   {accionLoading ? 'Iniciando…' : 'Sí, iniciar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmarConfirmar && (
+        <div className="modal-overlay" onMouseDown={() => setConfirmarConfirmar(false)}>
+          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-titulo">¿Confirmar inicio del torneo?</h3>
+              <button className="modal-cerrar" onClick={() => setConfirmarConfirmar(false)} aria-label="Cerrar">
+                <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-form">
+              <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
+                El torneo pasará a <strong>En curso</strong> y los resultados podrán registrarse.
+                Las fechas de los partidos aún podrán editarse después.
+              </p>
+              <div className="modal-acciones">
+                <button className="btn-secondary" onClick={() => setConfirmarConfirmar(false)} disabled={accionLoading}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-iniciar"
+                  disabled={accionLoading}
+                  onClick={async () => { setConfirmarConfirmar(false); await handleConfirmar() }}
+                >
+                  {accionLoading ? 'Confirmando…' : 'Sí, iniciar torneo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalFecha && (
+        <div className="modal-overlay" onMouseDown={() => setModalFecha(null)}>
+          <div className="modal-card modal-card--fecha" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-titulo">Editar fecha del partido</h3>
+                <p className="modal-subtitulo">
+                  <span>{modalFecha.equipo1?.nombre ?? 'TBD'}</span>
+                  <span style={{ margin: '0 6px', color: 'var(--text)' }}>vs</span>
+                  <span>{modalFecha.equipo2?.nombre ?? 'TBD'}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text)' }}>· {labelRonda(modalFecha.ronda)}</span>
+                </p>
+              </div>
+              <button className="modal-cerrar" onClick={() => setModalFecha(null)} aria-label="Cerrar">
+                <svg viewBox="0 0 16 16" fill="none" width="16" height="16">
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-form">
+              <div className="modal-fecha-picker">
+                <DatePicker
+                  inline
+                  selected={fechasPartidos[modalFecha.id] ? new Date(fechasPartidos[modalFecha.id]) : null}
+                  onChange={date => {
+                    if (!date) return
+                    const pad = n => String(n).padStart(2, '0')
+                    const str = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+                    setFechasPartidos(prev => ({ ...prev, [modalFecha.id]: str }))
+                  }}
+                  minDate={new Date()}
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  timeCaption="Hora"
+                  locale="es"
+                  calendarClassName="calendario-datepicker-calendar calendario-inline"
+                />
+              </div>
+              {errorFecha[modalFecha.id] && (
+                <p className="calendario-error-fecha">{errorFecha[modalFecha.id]}</p>
+              )}
+              <div className="modal-acciones">
+                <button className="btn-secondary" onClick={() => setModalFecha(null)}>
+                  Cancelar
+                </button>
+                <button
+                  className="btn-iniciar"
+                  onClick={() => handleGuardarFecha(modalFecha.id)}
+                  disabled={
+                    guardandoFecha[modalFecha.id] ||
+                    !fechasPartidos[modalFecha.id] ||
+                    fechasPartidos[modalFecha.id] === toDatetimeLocal(modalFecha.programado_en)
+                  }
+                >
+                  {guardandoFecha[modalFecha.id] ? 'Guardando…' : 'Guardar fecha'}
                 </button>
               </div>
             </div>

@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { torneoService } from '../services/torneoService'
 
 export function useTorneos(filtrosIniciales = {}) {
   const [torneos, setTorneos] = useState([])
   const [meta, setMeta] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   const cargar = useCallback(async (params = filtrosIniciales) => {
@@ -25,8 +25,6 @@ export function useTorneos(filtrosIniciales = {}) {
       setLoading(false)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => { cargar() }, [cargar])
 
   const crear = async (datos) => {
     const torneo = await torneoService.create(datos)

@@ -449,6 +449,77 @@
   margin-bottom: 12px;
 }
 
+/* ── Escudo de equipo ──────────────────────────────────────── */
+
+.equipo-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.equipo-escudo-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.equipo-escudo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equipo-escudo--placeholder {
+  background: var(--input-bg);
+  font-size: 22px;
+  line-height: 44px;
+  text-align: center;
+}
+
+.equipo-escudo-cambiar {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.equipo-escudo-wrap:hover .equipo-escudo-cambiar {
+  opacity: 1;
+}
+
+.escudo-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.escudo-preview-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* ── fin escudo ────────────────────────────────────────────── */
+
 .equipo-card-header {
   display: flex;
   align-items: flex-start;
@@ -1598,5 +1669,588 @@
   &:hover {
     color: var(--accent);
     text-decoration: underline;
+  }
+}
+
+/* ─── Calendario ───────────────────────────────────────────── */
+
+.calendario-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.calendario-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.calendario-btn-pdf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--sans);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+/* ── Layout dos columnas ── */
+.calendario-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calendario-col-izq {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendario-leyenda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  margin: 0;
+}
+
+.calendario-leyenda-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.calendario-col-der {
+  min-height: 320px;
+}
+
+/* Placeholder cuando no hay día seleccionado */
+.calendario-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  min-height: 280px;
+  color: var(--text);
+  text-align: center;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  padding: 32px;
+
+  p { margin: 0; font-size: 14px; }
+  svg { opacity: .4; }
+}
+
+/* Panel del día seleccionado */
+.calendario-dia-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calendario-dia-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+  text-transform: capitalize;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.calendario-dia-vacio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  text-align: center;
+  color: var(--text);
+  font-size: 14px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+
+  p { margin: 0; }
+}
+
+.calendario-dia-vacio-hint {
+  font-size: 12px;
+  opacity: .7;
+}
+
+.calendario-dia-partido {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  flex-wrap: wrap;
+
+  &.calendario-dia-partido--pendiente {
+    border-left: 3px solid #f59e0b;
+    background: color-mix(in srgb, #f59e0b 4%, var(--card-bg));
+  }
+}
+
+.calendario-dia-hora {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.calendario-dia-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.calendario-dia-ronda {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text);
+}
+
+/* Sin fecha */
+.calendario-sin-fecha-lista {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendario-btn-editar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sans);
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all .15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  &.calendario-btn-editar--asignar {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-bg);
+  }
+}
+
+.modal-card--fecha {
+  max-width: 480px;
+  width: 100%;
+}
+
+.modal-subtitulo {
+  font-size: 13px;
+  color: var(--text);
+  margin: 2px 0 0;
+  font-weight: 400;
+}
+
+.modal-fecha-picker {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0;
+
+  .calendario-datepicker-calendar.calendario-inline {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: none !important;
+
+    .react-datepicker__time-container {
+      float: right;
+      border-left: 1px solid var(--border) !important;
+    }
+
+    .react-datepicker__month-container {
+      float: left;
+    }
+  }
+}
+
+.calendario-error-fecha {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 4px 0 0;
+  width: 100%;
+}
+
+.calendario-sin-fecha-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text);
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Calendario inline */
+.calendario-datepicker-calendar.calendario-inline {
+  font-size: 14px !important;
+  border-radius: 14px !important;
+
+  .react-datepicker__day,
+  .react-datepicker__day-name {
+    width: 2.2rem !important;
+    line-height: 2.2rem !important;
+    margin: 2px !important;
+  }
+
+  .react-datepicker__day--highlighted {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-radius: 50% !important;
+    font-weight: 600 !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 80%, black) !important;
+    }
+
+    &.react-datepicker__day--selected {
+      background: color-mix(in srgb, var(--accent) 70%, black) !important;
+      outline: 3px solid var(--accent) !important;
+      outline-offset: 1px !important;
+    }
+  }
+}
+
+.calendario-info {
+  font-size: 14px;
+  color: var(--text);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 0;
+}
+
+.calendario-ronda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendario-ronda-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text);
+  margin: 0 0 6px;
+  padding-left: 2px;
+}
+
+.calendario-partido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  transition: border-color .15s;
+  flex-wrap: wrap;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  }
+
+  &.calendario-partido--sin-fecha {
+    border-left: 3px solid #f59e0b;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.calendario-partido-equipos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.calendario-equipo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.calendario-vs {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text);
+  flex-shrink: 0;
+  padding: 3px 8px;
+  background: var(--border);
+  border-radius: 20px;
+}
+
+.calendario-fecha-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
+}
+
+.calendario-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: text;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+}
+
+.calendario-input-icon {
+  color: var(--text);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.calendario-datepicker-input {
+  font-size: 13px;
+  font-family: var(--sans);
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text-h);
+  outline: none;
+  padding: 0;
+  width: 140px;
+  cursor: pointer;
+
+  &::placeholder {
+    color: var(--text);
+    font-weight: 400;
+  }
+}
+
+/* ── Calendario desplegable ── */
+.calendario-datepicker-calendar {
+  font-family: var(--sans) !important;
+  font-size: 13px !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow) !important;
+  background: var(--card-bg) !important;
+  overflow: hidden;
+
+  .react-datepicker__header {
+    background: var(--bg) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 10px 0 6px !important;
+  }
+
+  .react-datepicker__current-month {
+    color: var(--text-h) !important;
+    font-family: var(--sans) !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  .react-datepicker__day-name {
+    color: var(--text) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+  }
+
+  .react-datepicker__day {
+    color: var(--text-h) !important;
+    border-radius: 6px !important;
+    font-family: var(--sans) !important;
+
+    &:hover {
+      background: var(--accent-bg) !important;
+      color: var(--accent) !important;
+    }
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background: var(--accent) !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+  }
+
+  .react-datepicker__day--today {
+    font-weight: 700 !important;
+    color: var(--accent) !important;
+
+    &.react-datepicker__day--selected {
+      color: #fff !important;
+    }
+  }
+
+  .react-datepicker__day--outside-month {
+    color: var(--text) !important;
+    opacity: .4 !important;
+  }
+
+  .react-datepicker__navigation-icon::before {
+    border-color: var(--text) !important;
+  }
+
+  .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    border-color: var(--accent) !important;
+  }
+
+  .react-datepicker__time-container {
+    border-left: 1px solid var(--border) !important;
+  }
+
+  .react-datepicker__time-list-item {
+    color: var(--text-h) !important;
+    font-family: var(--sans) !important;
+
+    &:hover {
+      background: var(--accent-bg) !important;
+      color: var(--accent) !important;
+    }
+
+    &.react-datepicker__time-list-item--selected {
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  .react-datepicker__time-caption {
+    color: var(--text-h) !important;
+    font-family: var(--sans) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+  }
+}
+
+.calendario-btn-guardar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--sans);
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+
+  &.calendario-btn-guardar--activo {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--accent) 85%, black);
+    }
+  }
+
+  &:hover:not(:disabled):not(.calendario-btn-guardar--activo) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.calendario-fecha-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+
+  &.calendario-fecha-badge--ok {
+    background: color-mix(in srgb, #22c55e 12%, transparent);
+    color: #16a34a;
+    font-weight: 500;
+  }
+
+  &.calendario-fecha-badge--empty {
+    background: var(--border);
+    color: var(--text);
+    font-style: italic;
   }
 }

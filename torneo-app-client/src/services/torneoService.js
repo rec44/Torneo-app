@@ -25,6 +25,9 @@ export const torneoService = {
   iniciar: (id) =>
     api.post(`/torneos/${id}/iniciar`).then(r => r.data),
 
+  confirmar: (id) =>
+    api.post(`/torneos/${id}/confirmar`).then(r => r.data),
+
   crearInvitacion: (id, datos) =>
     api.post(`/torneos/${id}/invitacion`, datos).then(r => r.data),
 

@@ -76,9 +76,7 @@
             </tbody>
         </table>
     </div>
-    @if($usuarios->hasPages())
-        <div class="card-footer bg-white">{{ $usuarios->links() }}</div>
-    @endif
+    <div class="card-footer bg-white">{{ $usuarios->links() }}</div>
 </div>
 
 

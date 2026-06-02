@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrarResultadoRequest;
 use App\Http\Requests\UpdatePartidoRequest;
-use App\Mail\ResultadoRegistrado;
-use App\Mail\TorneoFinalizado;
+use App\Mail\FechaPartidoActualizada;
+// use App\Mail\ResultadoRegistrado;
+// use App\Mail\TorneoFinalizado;
 use App\Models\Partido;
 use App\Services\EloService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class PartidoController extends Controller
@@ -102,7 +102,30 @@ class PartidoController extends Controller
             }
         }
 
+        $fechaAnterior = $partido->programado_en?->format('Y-m-d H:i');
         $partido->update($data);
+
+        // Notificar solo si la fecha realmente cambió, solo al capitán de cada equipo
+        if (! empty($data['programado_en'])) {
+            $fresco       = $partido->fresh()->load('torneo', 'equipo1.capitan', 'equipo2.capitan');
+            $fechaNueva   = $fresco->programado_en?->format('Y-m-d H:i');
+            $fechaCambio  = $fechaNueva !== $fechaAnterior;
+
+            if ($fechaCambio) {
+                $cap1  = $fresco->equipo1?->capitan;
+                $cap2  = $fresco->equipo2?->capitan;
+                $nom1  = $fresco->equipo1?->nombre ?? 'TBD';
+                $nom2  = $fresco->equipo2?->nombre ?? 'TBD';
+                if ($cap1) {
+                    Mail::to($cap1->email)
+                        ->later(now(), new FechaPartidoActualizada($fresco, $cap1->nombre, $nom1, $nom2));
+                }
+                if ($cap2) {
+                    Mail::to($cap2->email)
+                        ->later(now()->addSeconds(3), new FechaPartidoActualizada($fresco, $cap2->nombre, $nom2, $nom1));
+                }
+            }
+        }
 
         return response()->json($partido->fresh());
     }
@@ -161,17 +184,17 @@ class PartidoController extends Controller
             $eloService->actualizarPorPartido($fresco);
         }
 
-        // Email de resultado a los miembros de ambos equipos
-        $historial = $fresco->historialElo()->get()->keyBy('usuario_id');
-        foreach ([$fresco->equipo1, $fresco->equipo2] as $equipo) {
-            if (! $equipo) continue;
-            foreach ($equipo->miembros as $miembro) {
-                $delta = $historial[$miembro->id]->delta ?? 0;
-                Mail::to($miembro->email)->queue(
-                    new ResultadoRegistrado($fresco->load('torneo', 'equipo1', 'equipo2', 'ganadorEquipo'), $miembro->nombre, $delta)
-                );
-            }
-        }
+        // Email de resultado — pendiente de activar
+        // $historial = $fresco->historialElo()->get()->keyBy('usuario_id');
+        // foreach ([$fresco->equipo1, $fresco->equipo2] as $equipo) {
+        //     if (! $equipo) continue;
+        //     foreach ($equipo->miembros as $miembro) {
+        //         $delta = $historial[$miembro->id]->delta ?? 0;
+        //         Mail::to($miembro->email)->queue(
+        //             new ResultadoRegistrado($fresco->load('torneo', 'equipo1', 'equipo2', 'ganadorEquipo'), $miembro->nombre, $delta)
+        //         );
+        //     }
+        // }
 
         // Finalizar el torneo automáticamente si ya no quedan partidos pendientes
         $hayPendientes = Partido::where('torneo_id', $torneo->id)
@@ -181,20 +204,10 @@ class PartidoController extends Controller
         if (! $hayPendientes) {
             $torneo->update(['estado' => 'finalizado']);
 
-            // Email de torneo finalizado a todos los participantes
-            $campeon = $fresco->ganadorEquipo?->nombre ?? '—';
-            $torneo->load('deporte');
-            $participantes = DB::table('usuarios')
-                ->join('equipo_usuarios', 'usuarios.id', '=', 'equipo_usuarios.usuario_id')
-                ->join('equipos', 'equipo_usuarios.equipo_id', '=', 'equipos.id')
-                ->where('equipos.torneo_id', $torneo->id)
-                ->select('usuarios.email', 'usuarios.nombre')
-                ->distinct()
-                ->get();
-
-            foreach ($participantes as $u) {
-                Mail::to($u->email)->queue(new TorneoFinalizado($torneo, $u->nombre, $campeon));
-            }
+            // Email de torneo finalizado — pendiente de activar
+            // foreach ($participantes as $u) {
+            //     Mail::to($u->email)->queue(new TorneoFinalizado($torneo, $u->nombre, $campeon));
+            // }
         }
 
         return response()->json(

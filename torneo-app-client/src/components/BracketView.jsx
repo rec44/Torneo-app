@@ -1,7 +1,7 @@
-function PartidoBracket({ partido, esOrganizador, onPartidoClick }) {
+function PartidoBracket({ partido, esOrganizador, onPartidoClick, torneoFinalizado }) {
   const finalizado  = partido.estado === 'finalizado'
   const ganadorId   = partido.ganador_equipo_id
-  const clickable   = esOrganizador && partido.equipo1 && partido.equipo2
+  const clickable   = esOrganizador && partido.equipo1 && partido.equipo2 && !torneoFinalizado
 
   return (
     <div
@@ -26,7 +26,7 @@ function PartidoBracket({ partido, esOrganizador, onPartidoClick }) {
   )
 }
 
-export function BracketView({ partidos, esOrganizador, onPartidoClick }) {
+export function BracketView({ partidos, esOrganizador, onPartidoClick, torneoFinalizado }) {
   if (!partidos || partidos.length === 0) {
     return (
       <div className="bracket-vacio">
@@ -40,11 +40,12 @@ export function BracketView({ partidos, esOrganizador, onPartidoClick }) {
       partidos={partidos}
       esOrganizador={esOrganizador}
       onPartidoClick={onPartidoClick}
+      torneoFinalizado={torneoFinalizado}
     />
   )
 }
 
-function EliminacionView({ partidos, esOrganizador, onPartidoClick }) {
+function EliminacionView({ partidos, esOrganizador, onPartidoClick, torneoFinalizado }) {
   const rondas = {}
   for (const p of partidos) {
     const r = p.ronda ?? 1
@@ -73,6 +74,7 @@ function EliminacionView({ partidos, esOrganizador, onPartidoClick }) {
                 partido={partido}
                 esOrganizador={esOrganizador}
                 onPartidoClick={onPartidoClick}
+                torneoFinalizado={torneoFinalizado}
               />
             ))}
           </div>

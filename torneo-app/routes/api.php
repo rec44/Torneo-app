@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('torneos/{torneo}/equipos/{equipo}/invitacion',          [EquipoController::class, 'crearInvitacion']);
     Route::delete('torneos/{torneo}/equipos/{equipo}/miembros/{usuario}', [EquipoController::class, 'expulsarMiembro']);
     Route::patch('torneos/{torneo}/equipos/{equipo}/lock',               [EquipoController::class, 'toggleLock']);
+    Route::post('torneos/{torneo}/equipos/{equipo}/escudo',              [EquipoController::class, 'updateEscudo']);
     Route::post('equipos/unirse-codigo',                                 [EquipoController::class, 'unirsePorCodigo']);
 
     // Partidos

@@ -13,6 +13,7 @@ use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class EquipoController extends Controller
@@ -36,15 +37,10 @@ class EquipoController extends Controller
             return response()->json(['message' => 'El torneo no está abierto para inscripciones.'], 422);
         }
 
-        $totalEquipos      = $torneo->equipos()->count();
         $equiposBloqueados = $torneo->equipos()->where('bloqueado', true)->count();
 
-        if ($totalEquipos >= $torneo->max_jugadores) {
-            return response()->json(['message' => 'El torneo está completo. No hay plazas disponibles.'], 422);
-        }
-
         if ($equiposBloqueados >= $torneo->max_jugadores) {
-            return response()->json(['message' => 'Todos los equipos están confirmados. No se pueden añadir más.'], 422);
+            return response()->json(['message' => 'El torneo está completo. No hay plazas disponibles.'], 422);
         }
 
         $yaEnEquipo = Equipo::where('torneo_id', $torneo->id)
@@ -55,9 +51,15 @@ class EquipoController extends Controller
             return response()->json(['message' => 'Ya estás en un equipo de este torneo.'], 422);
         }
 
+        $escudoPath = null;
+        if ($request->hasFile('escudo')) {
+            $escudoPath = $request->file('escudo')->store('escudos/equipos', 'public');
+        }
+
         $equipo = Equipo::create([
             'torneo_id'  => $torneo->id,
             'nombre'     => $request->validated()['nombre'],
+            'escudo'     => $escudoPath,
             'capitan_id' => $usuario->id,
         ]);
 
@@ -109,6 +111,10 @@ class EquipoController extends Controller
             return response()->json(['message' => 'Solo puedes retirar tu equipo mientras el torneo esté abierto.'], 422);
         }
 
+        if ($equipo->escudo) {
+            Storage::disk('public')->delete($equipo->escudo);
+        }
+
         $equipo->delete();
 
         return response()->json(null, 204);
@@ -132,6 +138,38 @@ class EquipoController extends Controller
         ]);
 
         $equipo->update($data);
+
+        return response()->json($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
+    }
+
+    public function updateEscudo(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
+    {
+        if ($equipo->torneo_id !== $torneo->id) {
+            return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
+        }
+
+        $esDueno   = $request->user()->id === $torneo->creado_por || $request->user()->rol === 'admin';
+        $esCapitan = $request->user()->id === $equipo->capitan_id;
+
+        if (! $esDueno && ! $esCapitan) {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $request->validate([
+            'escudo' => ['required', 'file', 'max:2048', function ($attr, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                    $fail('El escudo debe ser una imagen (jpg, jpeg, png o webp).');
+                }
+            }],
+        ]);
+
+        if ($equipo->escudo) {
+            Storage::disk('public')->delete($equipo->escudo);
+        }
+
+        $path = $request->file('escudo')->store('escudos/equipos', 'public');
+        $equipo->update(['escudo' => $path]);
 
         return response()->json($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
     }

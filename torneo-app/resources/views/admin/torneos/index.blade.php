@@ -18,9 +18,8 @@
                     <th>#</th>
                     <th>Nombre</th>
                     <th>Deporte</th>
-                    <th>Formato</th>
                     <th>Estado</th>
-                    <th>Jugadores</th>
+                    <th>Equipos</th>
                     <th>Inicio</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -30,8 +29,7 @@
                     <tr>
                         <td class="text-muted small">{{ $torneo->id }}</td>
                         <td class="fw-semibold">{{ $torneo->nombre }}</td>
-                        <td class="text-muted small">{{ $torneo->deporte->nombre }}</td>
-                        <td class="text-muted small">{{ str_replace('_', ' ', $torneo->formato) }}</td>
+                        <td class="text-muted small">{{ $torneo->deporte?->nombre ?? '—' }}</td>
                         <td>
                             <span class="badge rounded-pill badge-estado-{{ $torneo->estado }} px-2 py-1">
                                 {{ ucfirst(str_replace('_', ' ', $torneo->estado)) }}
@@ -46,33 +44,28 @@
                             {{ $torneo->fecha_inicio ? $torneo->fecha_inicio->format('d/m/Y') : '—' }}
                         </td>
                         <td class="text-end">
-                            @if($torneo->estado !== 'en_curso')
-                                <a href="{{ route('admin.torneos.edit', $torneo) }}"
-                                   class="btn btn-sm btn-outline-secondary me-1">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                    data-bs-toggle="modal" data-bs-target="#modalEliminar"
-                                    data-action="{{ route('admin.torneos.destroy', $torneo) }}"
-                                    data-nombre="{{ $torneo->nombre }}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            @else
-                                <span class="text-muted small">En curso</span>
-                            @endif
+                            <a href="{{ config('app.frontend_url') }}/torneos/{{ $torneo->id }}"
+                               target="_blank" class="btn btn-sm btn-outline-secondary me-1"
+                               title="Ver torneo">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                                data-action="{{ route('admin.torneos.destroy', $torneo) }}"
+                                data-nombre="{{ $torneo->nombre }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No hay torneos registrados.</td>
+                        <td colspan="7" class="text-center text-muted py-4">No hay torneos registrados.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    @if($torneos->hasPages())
-        <div class="card-footer bg-white">{{ $torneos->links() }}</div>
-    @endif
+    <div class="card-footer bg-white">{{ $torneos->links() }}</div>
 </div>
 
 

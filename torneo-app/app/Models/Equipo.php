@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Equipo extends Model
 {
@@ -17,11 +19,22 @@ class Equipo extends Model
     protected $fillable = [
         'torneo_id',
         'nombre',
+        'escudo',
         'capitan_id',
         'semilla',
         'bloqueado',
         'inscrito',
     ];
+
+    protected $appends = ['escudo_url'];
+
+    protected function escudoUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->escudo
+            ? url(Storage::url($this->escudo))
+            : null
+        );
+    }
 
     protected function casts(): array
     {

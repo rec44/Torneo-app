@@ -19,7 +19,7 @@ export function RegisterPage() {
   const [errorGeneral, setErrorGeneral] = useState(null)
   const [cargando, setCargando] = useState(false)
 
-  if (!loadingAuth && user) return <Navigate to="/torneos" replace />
+  if (!loadingAuth && user) return <Navigate to={redirectTo} replace />
 
   const handleChange = (e) => {
     const { name, value } = e.target

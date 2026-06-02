@@ -15,6 +15,12 @@ class StoreEquipoRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string|max:100',
+            'escudo' => ['nullable', 'file', 'max:2048', function ($attr, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                    $fail('El escudo debe ser una imagen (jpg, jpeg, png o webp).');
+                }
+            }],
         ];
     }
 }

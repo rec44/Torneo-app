@@ -10,6 +10,9 @@ export const partidoService = {
   update: (id, datos) =>
     api.put(`/partidos/${id}`, datos).then(r => r.data),
 
+  actualizarFecha: (id, programado_en) =>
+    api.patch(`/partidos/${id}`, { programado_en }).then(r => r.data),
+
   delete: (id) =>
     api.delete(`/partidos/${id}`),
 

@@ -14,8 +14,8 @@ class RegistrarResultadoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'resultado_e1'      => 'required|string|max:50',
-            'resultado_e2'      => 'required|string|max:50',
+            'resultado_e1'      => 'required|integer|min:0',
+            'resultado_e2'      => 'required|integer|min:0',
             'ganador_equipo_id' => 'required|exists:equipos,id',
         ];
     }

@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\IniciarTorneoRequest;
 use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
-use App\Mail\TorneoIniciado;
-use App\Mail\TorneoFinalizado;
+use App\Mail\CalendarioConfirmado;
+// use App\Mail\TorneoIniciado;
+// use App\Mail\TorneoFinalizado;
 use App\Models\Partido;
 use App\Models\Torneo;
 use App\Models\Usuario;
@@ -33,7 +34,7 @@ class TorneoController extends Controller
             ->when($request->elo_min,      fn($q, $v) => $q->where('elo_minimo', '>=', $v))
             ->when($request->elo_max,      fn($q, $v) => $q->where('elo_maximo', '<=', $v))
             ->orderBy('fecha_inicio', 'asc')
-            ->paginate(15);
+            ->paginate(9);
 
         return response()->json($torneos);
     }
@@ -144,9 +145,7 @@ class TorneoController extends Controller
             $this->generarBracketEliminacionSimple($torneo, $confirmados->values());
         }
 
-        foreach ($this->participantes($torneo) as $u) {
-            Mail::to($u->email)->queue(new TorneoIniciado($torneo->fresh()->load('deporte'), $u->nombre));
-        }
+        // Mail::to(...)->queue(new TorneoIniciado(...)); // pendiente de activar
 
         $mensaje = 'Bracket generado. Asigna fechas a los partidos en la pestaña Calendario y confirma el inicio.';
         if ($noConfirmados->isNotEmpty()) {
@@ -168,7 +167,10 @@ class TorneoController extends Controller
             return response()->json(['message' => 'El torneo no está en fase de programación.'], 422);
         }
 
-        $sinFecha = $torneo->partidos()->whereNull('programado_en')->count();
+        $sinFecha = $torneo->partidos()
+            ->whereNull('programado_en')
+            ->where('estado', '!=', 'finalizado')
+            ->count();
 
         if ($sinFecha > 0) {
             return response()->json([
@@ -177,6 +179,14 @@ class TorneoController extends Controller
         }
 
         $torneo->update(['estado' => 'en_curso']);
+
+        $torneoConDatos = $torneo->fresh()->load('deporte', 'partidos.equipo1', 'partidos.equipo2');
+        $participantes  = $this->participantes($torneo);
+
+        foreach ($participantes as $i => $participante) {
+            Mail::to($participante->email)
+                ->later(now()->addSeconds($i * 3), new CalendarioConfirmado($torneoConDatos, $participante->nombre));
+        }
 
         return response()->json([
             'message' => 'Torneo en curso.',
@@ -229,6 +239,35 @@ class TorneoController extends Controller
                     'programado_en' => null,
                 ]);
             }
+        }
+
+        // Propagar byes: colocar al ganador en su partido de ronda 2
+        $idsRonda1 = Partido::where('torneo_id', $torneo->id)
+            ->where('ronda', 1)
+            ->orderBy('id')
+            ->pluck('id');
+
+        $byes = Partido::where('torneo_id', $torneo->id)
+            ->where('ronda', 1)
+            ->where('estado', 'finalizado')
+            ->get();
+
+        foreach ($byes as $bye) {
+            $posicion  = $idsRonda1->search($bye->id);
+            if ($posicion === false) continue;
+
+            $siguiente = Partido::where('torneo_id', $torneo->id)
+                ->where('ronda', 2)
+                ->orderBy('id')
+                ->skip(intdiv($posicion, 2))
+                ->first();
+
+            if (! $siguiente) continue;
+
+            $siguiente->update($posicion % 2 === 0
+                ? ['equipo1_id' => $bye->ganador_equipo_id]
+                : ['equipo2_id' => $bye->ganador_equipo_id]
+            );
         }
     }
 

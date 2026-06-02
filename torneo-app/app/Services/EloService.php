@@ -129,25 +129,27 @@ class EloService
     }
 
     // Devuelve [kGanador, kPerdedor].
-    // El perdedor usa una K menor en rondas avanzadas: cuanto más lejos llegues, menos pierdes.
+    // Cuanto más lejos llegues antes de perder, menos pierdes (y el ganador gana más en finales).
     private function kFactor(int $ronda, int $maxRonda, float $mediaElo): array
     {
         $distanciaFinal = $maxRonda - $ronda;
 
+        // kBase más alto en rondas avanzadas: ganar la final vale más
         $kBase = match (true) {
-            $distanciaFinal === 0 => 32,   // Final
-            $distanciaFinal === 1 => 28,   // Semis
-            $distanciaFinal === 2 => 24,   // Cuartos
-            default               => 20,   // Rondas anteriores
+            $distanciaFinal === 0 => 40,   // Final
+            $distanciaFinal === 1 => 32,   // Semis
+            $distanciaFinal === 2 => 28,   // Cuartos
+            default               => 24,   // Rondas anteriores
         };
 
-        // Cuanto más avanzada la ronda, menor penalización para el perdedor.
-        // En rondas tempranas es simétrico (factor 1.0).
+        // El perdedor usa solo una fracción del K según lo lejos que llegó.
+        // Rondas tempranas (cuartos, previas) → penalización alta.
+        // Final → penalización mínima (llegaste lejos).
         $proteccionPerdedor = match (true) {
-            $distanciaFinal === 0 => 0.50,  // Final:   pierde la mitad
-            $distanciaFinal === 1 => 0.65,  // Semis:   pierde el 65 %
-            $distanciaFinal === 2 => 0.80,  // Cuartos: pierde el 80 %
-            default               => 1.00,  // Sin protección en rondas tempranas
+            $distanciaFinal === 0 => 0.30,  // Final:   pierde solo el 30 %
+            $distanciaFinal === 1 => 0.50,  // Semis:   pierde el 50 %
+            $distanciaFinal === 2 => 0.75,  // Cuartos: pierde el 75 %
+            default               => 1.00,  // Rondas previas: sin protección
         };
 
         // Torneos de alto nivel dan hasta un 20 % más
