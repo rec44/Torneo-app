@@ -13,8 +13,6 @@ El torneo **{{ $torneo->nombre }}** ha concluido. ¡Gracias a todos los particip
 **Fecha de fin:** {{ $torneo->fecha_fin?->format('d/m/Y') ?? now()->format('d/m/Y') }}
 </x-mail::panel>
 
-Consulta el bracket completo con todos los resultados en la aplicación.
-
 <x-mail::button :url="config('app.frontend_url') . '/torneos/' . $torneo->id">
 Ver resultados
 </x-mail::button>

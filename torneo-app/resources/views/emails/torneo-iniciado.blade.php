@@ -12,8 +12,6 @@ El torneo **{{ $torneo->nombre }}** ha generado el bracket y está en fase de pr
 **Fecha de inicio:** {{ $torneo->fecha_inicio?->format('d/m/Y') ?? 'Por confirmar' }}
 </x-mail::panel>
 
-Consulta el bracket y el calendario completo desde la aplicación.
-
 <x-mail::button :url="config('app.frontend_url') . '/torneos/' . $torneo->id">
 Ver torneo
 </x-mail::button>

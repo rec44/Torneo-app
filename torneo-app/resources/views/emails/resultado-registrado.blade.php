@@ -12,7 +12,7 @@ Se ha registrado el resultado de tu partido en **{{ $partido->torneo->nombre }}*
 </x-mail::panel>
 
 @if($deltaElo > 0)
-**Tu ELO ha subido {{ $deltaElo > 0 ? '+' : '' }}{{ $deltaElo }} puntos.** ¡Buen trabajo!
+**Tu ELO ha subido +{{ $deltaElo }} puntos.** ¡Buen trabajo!
 @elseif($deltaElo < 0)
 **Tu ELO ha bajado {{ $deltaElo }} puntos.** ¡Ánimo para el siguiente!
 @endif

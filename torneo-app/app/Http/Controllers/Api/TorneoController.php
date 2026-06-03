@@ -189,7 +189,7 @@ class TorneoController extends Controller
 
         foreach ($participantes as $i => $participante) {
             Mail::to($participante->email)
-                ->later(now()->addSeconds($i * 3), new CalendarioConfirmado($torneoConDatos, $participante->nombre));
+                ->later(now()->addSeconds($i * 12), new CalendarioConfirmado($torneoConDatos, $participante->nombre));
         }
 
         return response()->json([

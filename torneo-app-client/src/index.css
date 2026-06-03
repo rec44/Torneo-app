@@ -1,44 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
-:root {
-  --text: #78736a;
-  --text-h: #18150e;
-  --bg: #fdfcfa;
-  --card-bg: #ffffff;
-  --border: #e8e3db;
-  --code-bg: #f5f2ec;
-  --accent: #f97316;
-  --accent-bg: rgba(249, 115, 22, 0.09);
-  --accent-border: rgba(249, 115, 22, 0.38);
-  --social-bg: rgba(245, 242, 236, 0.6);
-  --shadow:
-    rgba(0, 0, 0, 0.08) 0 10px 15px -3px, rgba(0, 0, 0, 0.04) 0 4px 6px -2px;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.05);
-  --card-shadow-hover: 0 4px 20px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+/* ── Custom design tokens ──────────────────────────────────── */
+@theme {
+  --color-skin-bg:      #fdfcfa;
+  --color-skin-text:    #78736a;
+  --color-skin-heading: #18150e;
+  --color-skin-card:    #ffffff;
+  --color-skin-border:  #e8e3db;
+  --color-skin-code:    #f5f2ec;
+  --color-accent:       #f97316;
+  --color-accent-muted: rgba(249,115,22,0.09);
 
-  --sans: 'Outfit', system-ui, sans-serif;
-  --heading: 'Outfit', system-ui, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --font-family-sans: 'Outfit', system-ui, sans-serif;
+  --font-family-mono: ui-monospace, Consolas, monospace;
 
-  font: 17px/150% var(--sans);
-  letter-spacing: 0.1px;
-  color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 15px;
-  }
+  --shadow-card:       0 1px 3px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.05);
+  --shadow-card-hover: 0 4px 20px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
 }
 
+/* ── Legacy variable aliases (TorneoDetallePage.css compat) ── */
+:root {
+  --text:              var(--color-skin-text);
+  --text-h:            var(--color-skin-heading);
+  --bg:                var(--color-skin-bg);
+  --card-bg:           var(--color-skin-card);
+  --border:            var(--color-skin-border);
+  --code-bg:           var(--color-skin-code);
+  --accent:            var(--color-accent);
+  --accent-bg:         var(--color-accent-muted);
+  --accent-border:     rgba(249,115,22,0.38);
+  --sans:              var(--font-family-sans);
+  --shadow:            rgba(0,0,0,.08) 0 10px 15px -3px, rgba(0,0,0,.04) 0 4px 6px -2px;
+  --card-shadow:       var(--shadow-card);
+  --card-shadow-hover: var(--shadow-card-hover);
+  --social-bg:         rgba(245,242,236,0.6);
+}
+
+/* ── Global resets ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
-  text-align: left;
+  font-family: var(--font-family-sans);
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0.1px;
+  color: var(--color-skin-text);
+  background: var(--color-skin-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -46,53 +57,84 @@ body {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  text-align: left;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--heading);
+h1, h2, h3, h4 {
+  font-family: var(--font-family-sans);
   font-weight: 500;
-  color: var(--text-h);
+  color: var(--color-skin-heading);
   text-align: left;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+p { margin: 0; }
+
+/* ── Shimmer animation (skeleton loaders) ──────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-skin-border) 25%,
+    var(--color-skin-code)   50%,
+    var(--color-skin-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* ── Modal animation ───────────────────────────────────────── */
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-in { animation: modal-in .2s ease; }
+
+/* ── Custom scrollbar (thin) ───────────────────────────────── */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-skin-border) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-skin-border);
+  border-radius: 99px;
+}
+
+/* ── React DatePicker overrides ────────────────────────────── */
+.react-datepicker-wrapper { width: 100%; }
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--font-family-sans);
+  color: var(--color-skin-heading);
+  background: var(--color-skin-code);
+  border: 1px solid var(--color-skin-border);
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+.react-datepicker__input-container input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
+}
+
+/* ── Select arrow override ─────────────────────────────────── */
+.select-arrow {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6375' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* ── Focus ring utility ────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }

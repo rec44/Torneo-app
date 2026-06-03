@@ -15,13 +15,13 @@ class EloService
         if ($delta1 === null) return;
 
         foreach ($miembros1 as $u) {
-            $eloAntes = $u->elo;
+            $eloAntes = $this->eloDeporteActual($u->id, $deporteId);
             $u->increment('elo', $delta1);
             $this->actualizarEloDeporte($u->id, $deporteId, $delta1);
             $this->guardarHistorial($u->id, $partido->id, $eloAntes, $eloAntes + $delta1, $delta1);
         }
         foreach ($miembros2 as $u) {
-            $eloAntes = $u->elo;
+            $eloAntes = $this->eloDeporteActual($u->id, $deporteId);
             $u->increment('elo', $delta2);
             $this->actualizarEloDeporte($u->id, $deporteId, $delta2);
             $this->guardarHistorial($u->id, $partido->id, $eloAntes, $eloAntes + $delta2, $delta2);
@@ -93,12 +93,36 @@ class EloService
         $k1 = $esGanador1 ? $kGanador : $kPerdedor;
         $k2 = $esGanador1 ? $kPerdedor : $kGanador;
 
-        $delta1 = (int) round($k1 * ($resultado1 - $e1));
-        $delta2 = (int) round($k2 * ($resultado2 - $e2));
+        $raw1 = (int) round($k1 * ($resultado1 - $e1));
+        $raw2 = (int) round($k2 * ($resultado2 - $e2));
+
+        // mínimo garantizado por fase para que llegar lejos siempre tenga peso
+        $distanciaFinal = $maxRonda - ($partido->ronda ?? 1);
+        $minGanador = match (true) {
+            $distanciaFinal === 0 => 10,  // final
+            $distanciaFinal === 1 => 7,   // semifinal
+            $distanciaFinal === 2 => 5,   // cuartos
+            default               => 3,   // rondas anteriores
+        };
+
+        $delta1 = $resultado1 === 1.0
+            ? max($raw1, $minGanador)
+            : min($raw1, -1);
+        $delta2 = $resultado2 === 1.0
+            ? max($raw2, $minGanador)
+            : min($raw2, -1);
 
         $deporteId = DB::table('torneos')->where('id', $partido->torneo_id)->value('deporte_id');
 
         return [$delta1, $delta2, $miembros1, $miembros2, $deporteId];
+    }
+
+    private function eloDeporteActual(int $usuarioId, int $deporteId): int
+    {
+        return (int) (DB::table('elo_usuario_deporte')
+            ->where('usuario_id', $usuarioId)
+            ->where('deporte_id', $deporteId)
+            ->value('elo') ?? 500);
     }
 
     private function actualizarEloDeporte(int $usuarioId, int $deporteId, int $delta): void

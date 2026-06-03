@@ -1,5 +1,4 @@
-﻿import { Link } from 'react-router-dom'
-import './Footer.css'
+import { Link } from 'react-router-dom'
 
 const SOCIAL = [
   {
@@ -36,11 +35,15 @@ const SOCIAL = [
 
 export function Footer() {
   return (
-    <footer className="pie">
-      <div className="pie-interior">
+    <footer className="bg-[#111009] text-[#a09890] border-t-[3px] border-accent mt-auto">
 
-        <div className="pie-columna-marca">
-          <Link to="/torneos" className="pie-marca">
+      {/* Fila principal */}
+      <div className="flex items-center justify-between gap-8 px-12 py-6 flex-wrap max-md:px-5 max-md:gap-5">
+
+        {/* Marca */}
+        <div className="flex flex-col gap-[6px]">
+          <Link to="/torneos"
+            className="inline-flex items-center gap-[7px] text-[15px] font-bold text-[#f5f0e8] no-underline tracking-tight [&_svg]:text-accent">
             <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
               <path d="M5 2h10v7a5 5 0 0 1-10 0V2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
               <path d="M2 5h3M18 5h-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -48,30 +51,43 @@ export function Footer() {
             </svg>
             RiseCup
           </Link>
-          <p className="pie-eslogan">Torneos deportivos con brackets automáticos y sistema ELO.</p>
+          <p className="text-[12px] text-[#4a4640] max-w-[240px] leading-[1.5]">
+            Torneos deportivos con brackets automáticos y sistema ELO.
+          </p>
         </div>
 
-        <div className="pie-fila-enlaces">
-          <Link to="/torneos"     className="pie-enlace">Torneos</Link>
-          <Link to="/mis-torneos" className="pie-enlace">Mis torneos</Link>
-          <Link to="/perfil"      className="pie-enlace">Perfil</Link>
+        {/* Links */}
+        <div className="flex gap-[6px] flex-wrap max-[480px]:hidden">
+          {[
+            { to: '/torneos',     label: 'Torneos' },
+            { to: '/mis-torneos', label: 'Mis torneos' },
+            { to: '/perfil',      label: 'Perfil' },
+          ].map(({ to, label }) => (
+            <Link key={to} to={to}
+              className="px-3 py-[5px] text-[13px] text-[#706a60] no-underline rounded-md transition-colors hover:text-[#f5f0e8] hover:bg-white/5">
+              {label}
+            </Link>
+          ))}
         </div>
 
-        <div className="pie-social">
+        {/* Social */}
+        <div className="flex gap-2">
           {SOCIAL.map(s => (
-            <a key={s.label} href={s.href} className="pie-btn-social"
+            <a key={s.label} href={s.href}
+              className="inline-flex items-center justify-center w-[34px] h-[34px] text-[#706a60] bg-white/[0.04] border border-[#1e1c14] rounded-lg no-underline transition-all hover:text-[#f5f0e8] hover:border-accent hover:bg-accent/10"
               target="_blank" rel="noreferrer" aria-label={s.label}>
               {s.icon}
             </a>
           ))}
         </div>
-
       </div>
 
-      <div className="pie-inferior">
+      {/* Barra inferior */}
+      <div className="flex items-center justify-between px-12 py-3 border-t border-[#1a1810] text-[12px] text-[#302e26] max-md:px-5 max-md:flex-col max-md:gap-1 max-md:text-center">
         <span>© {new Date().getFullYear()} RiseCup</span>
-        <span className="pie-email">contacto@risecup.gg</span>
+        <span className="text-[#3d3a30]">contacto@risecup.gg</span>
       </div>
+
     </footer>
   )
 }

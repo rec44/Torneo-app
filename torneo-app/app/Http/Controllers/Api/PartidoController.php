@@ -110,7 +110,7 @@ class PartidoController extends Controller
         if (! empty($data['programado_en'])) {
             $fresco      = $partido->fresh()->load('torneo', 'equipo1.capitan', 'equipo2.capitan');
             $fechaNueva  = $fresco->programado_en?->format('Y-m-d H:i');
-            $fechaCambio = $fechaNueva !== $fechaAnterior;
+            $fechaCambio = $fechaAnterior !== null && $fechaNueva !== $fechaAnterior;
 
             if ($fechaCambio) {
                 $cap1 = $fresco->equipo1?->capitan;
@@ -119,11 +119,11 @@ class PartidoController extends Controller
                 $nom2 = $fresco->equipo2?->nombre ?? 'Por definir';
                 if ($cap1) {
                     Mail::to($cap1->email)
-                        ->later(now(), new FechaPartidoActualizada($fresco, $cap1->nombre, $nom1, $nom2));
+                        ->later(now()->addSeconds(5), new FechaPartidoActualizada($fresco, $cap1->nombre, $nom1, $nom2));
                 }
                 if ($cap2) {
                     Mail::to($cap2->email)
-                        ->later(now()->addSeconds(3), new FechaPartidoActualizada($fresco, $cap2->nombre, $nom2, $nom1));
+                        ->later(now()->addSeconds(17), new FechaPartidoActualizada($fresco, $cap2->nombre, $nom2, $nom1));
                 }
             }
         }

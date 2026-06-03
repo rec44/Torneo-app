@@ -154,7 +154,7 @@ class EquipoController extends Controller
         }
 
         $request->validate([
-            'escudo' => ['required', 'file', 'max:2048', function ($attr, $value, $fail) {
+            'escudo' => ['required', 'file', 'max:2048', function ($_, $value, $fail) {
                 $ext = strtolower($value->getClientOriginalExtension());
                 if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
                     $fail('El escudo debe ser una imagen (jpg, jpeg, png o webp).');
@@ -417,7 +417,8 @@ class EquipoController extends Controller
             ->where('deporte_id', $torneo->deporte_id)
             ->value('elo');
 
-        return $eloDeporte ?? 500;
+        // Si no hay ELO en este deporte usa el ELO global del usuario como base
+        return $eloDeporte ?? $usuario->elo;
     }
 
     private function mensajeEloInvalido(int $elo, Torneo $torneo): ?string

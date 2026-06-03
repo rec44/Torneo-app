@@ -795,7 +795,7 @@ export function TorneoDetallePage() {
           <BracketView
             partidos={partidosOrdenados}
             esOrganizador={esOrganizador}
-            onPartidoClick={setModalPartido}
+            onPartidoClick={torneo.estado === 'en_curso' ? setModalPartido : undefined}
             torneoFinalizado={torneo.estado === 'finalizado'}
           />
         )}
@@ -1136,7 +1136,7 @@ export function TorneoDetallePage() {
                             <div key={m.id} className="equipo-miembro">
                               <span className="equipo-miembro-nombre">{m.nombre}</span>
                               <span className="miembro-elo">
-                                {torneo.deporte?.nombre ?? 'Deporte'} · {m.pivot?.elo_al_unirse ?? m.elo} ELO
+                                {torneo.deporte?.nombre ?? 'Deporte'} · {m.elo_al_unirse ?? m.elo} ELO
                               </span>
                               <Link to={`/usuarios/${m.id}`} className="equipo-miembro-perfil">
                                 Ver perfil
@@ -1229,17 +1229,22 @@ export function TorneoDetallePage() {
                   <div className="mi-equipo-miembro-info">
                     <Link to={`/usuarios/${m.id}`} className="mi-equipo-miembro-nombre mi-equipo-miembro-link">{m.nombre}</Link>
                     {m.id === miEquipo.capitan?.id && <span className="insignia-capitan">Capitán</span>}
-                    <span className="mi-equipo-miembro-elo">ELO {m.pivot?.elo_al_unirse ?? m.elo}</span>
+                    <span className="mi-equipo-miembro-elo">{m.elo_al_unirse ?? m.elo} ELO</span>
                   </div>
-                  {(esCapitan || esOrganizador) && m.id !== miEquipo.capitan?.id && torneo.estado === 'abierto' && (
-                    <button
-                      className="btn-expulsar"
-                      onClick={() => handleExpulsar(m)}
-                      disabled={accionLoading}
-                    >
-                      Expulsar
-                    </button>
-                  )}
+                  <div className="mi-equipo-miembro-acciones">
+                    <Link to={`/usuarios/${m.id}`} className="equipo-miembro-perfil">
+                      Ver perfil
+                    </Link>
+                    {(esCapitan || esOrganizador) && m.id !== miEquipo.capitan?.id && torneo.estado === 'abierto' && (
+                      <button
+                        className="btn-expulsar"
+                        onClick={() => handleExpulsar(m)}
+                        disabled={accionLoading}
+                      >
+                        Expulsar
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1294,107 +1299,117 @@ export function TorneoDetallePage() {
           <div className="partidos-historial">
             {partidosHistorial.length === 0 ? (
               <p className="detalle-vacio">No hay partidos jugados todavía.</p>
-            ) : (
-              partidosHistorial.map(p => {
-                const enEquipo1  = p.equipo1?.id === miEquipo?.id
-                const enEquipo2  = p.equipo2?.id === miEquipo?.id
-                const deltaPropio = enEquipo1 ? p.delta_elo_e1 : enEquipo2 ? p.delta_elo_e2 : null
-                const abierto    = expandidos.has(p.id)
+            ) : (() => {
+              // agrupar por ronda descendente (Final primero)
+              const porRonda = partidosHistorial.reduce((acc, p) => {
+                const r = p.ronda ?? 0
+                if (!acc[r]) acc[r] = []
+                acc[r].push(p)
+                return acc
+              }, {})
+              const rondasDesc = Object.keys(porRonda).map(Number).sort((a, b) => b - a)
 
-                // necesitamos el equipo completo para mostrar el ELO de cada miembro
-                const eq1 = (torneo.equipos ?? []).find(e => e.id === p.equipo1?.id)
-                const eq2 = (torneo.equipos ?? []).find(e => e.id === p.equipo2?.id)
-
-                return (
-                  <div key={p.id} className="partido-bloque">
-                    {/* fila resumen */}
-                    <div
-                      className={`partido-fila partido-fila--${p.estado} partido-fila--clickable`}
-                      onClick={() => toggleExpandido(p.id)}
-                      role="button"
-                      aria-expanded={abierto}
-                    >
-                      <span className="partido-ronda">R{p.ronda ?? '?'}</span>
-                      <div className="partido-enfrentamiento">
-                        <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : (!p.equipo1 ? 'nombre-pendiente' : '')}>
-                          {p.equipo1?.nombre ?? 'Por definir'}
-                        </span>
-                        <span className="partido-resultado">
-                          {p.resultado_e1} – {p.resultado_e2}
-                        </span>
-                        <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : (!p.equipo2 ? 'nombre-pendiente' : '')}>
-                          {p.equipo2?.nombre ?? 'Por definir'}
-                        </span>
-                      </div>
-                      <span className={`insignia-partido-estado insignia-partido-estado--${p.estado}`}>
-                        {ESTADO_PARTIDO_LABELS[p.estado] ?? p.estado}
-                      </span>
-                      {deltaPropio !== null && (
-                        <span className={`partido-delta ${deltaPropio >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
-                          {deltaPropio >= 0 ? '+' : ''}{deltaPropio} ELO
-                        </span>
-                      )}
-                      <svg className={`partido-chevron ${abierto ? 'partido-chevron--abierto' : ''}`}
-                        viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
-                        <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-
-                    {/* detalle */}
-                    {abierto && (
-                      <div className="partido-detalle">
-                        {[
-                          { equipo: eq1 ?? p.equipo1, delta: p.delta_elo_e1, esGanador: p.ganador_equipo_id === p.equipo1?.id },
-                          { equipo: eq2 ?? p.equipo2, delta: p.delta_elo_e2, esGanador: p.ganador_equipo_id === p.equipo2?.id },
-                        ].map(({ equipo, delta, esGanador }) => equipo && (
-                          <div key={equipo.id} className="partido-detalle-equipo">
-                            <div className="partido-detalle-equipo-header">
-                              <span className={`partido-detalle-nombre ${esGanador ? 'partido-detalle-nombre--ganador' : ''}`}>
-                                {esGanador && '🏆 '}{equipo.nombre}
-                              </span>
-                              {delta !== null && (
-                                <span className={`partido-delta ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
-                                  {delta >= 0 ? '+' : ''}{delta} ELO
-                                </span>
-                              )}
-                            </div>
-                            <div className="partido-detalle-miembros">
-                              {(equipo.miembros ?? []).map(m => {
-                                const snap = (p.historial_elo ?? []).find(h => h.usuario_id === m.id)
-                                return (
-                                  <div key={m.id} className="partido-detalle-miembro">
-                                    <span className="partido-detalle-miembro-nombre">{m.nombre}</span>
-                                    {snap ? (
-                                      <>
-                                        <span className="partido-detalle-elo-progresion">
-                                          {snap.elo_antes} → {snap.elo_despues}
-                                        </span>
-                                        <span className={`partido-delta partido-delta--sm ${snap.delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
-                                          {snap.delta >= 0 ? '+' : ''}{snap.delta}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      delta !== null && (
-                                        <span className={`partido-delta partido-delta--sm ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
-                                          {delta >= 0 ? '+' : ''}{delta} ELO
-                                        </span>
-                                      )
-                                    )}
-                                  </div>
-                                )
-                              })}
-                              {(!equipo.miembros || equipo.miembros.length === 0) && (
-                                <span className="partido-detalle-sin-miembros">Sin miembros registrados</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              return rondasDesc.map(ronda => (
+                <div key={ronda} className="historial-grupo-ronda">
+                  <div className="historial-ronda-cabecera">
+                    <span className="historial-ronda-label">{labelRonda(ronda)}</span>
+                    <span className="historial-ronda-count">{porRonda[ronda].length} partido{porRonda[ronda].length !== 1 ? 's' : ''}</span>
                   </div>
-                )
-              })
-            )}
+
+                  {porRonda[ronda].map(p => {
+                    const enEquipo1   = p.equipo1?.id === miEquipo?.id
+                    const enEquipo2   = p.equipo2?.id === miEquipo?.id
+                    const deltaPropio = enEquipo1 ? p.delta_elo_e1 : enEquipo2 ? p.delta_elo_e2 : null
+                    const abierto     = expandidos.has(p.id)
+                    const eq1         = (torneo.equipos ?? []).find(e => e.id === p.equipo1?.id)
+                    const eq2         = (torneo.equipos ?? []).find(e => e.id === p.equipo2?.id)
+
+                    return (
+                      <div key={p.id} className="partido-bloque">
+                        <div
+                          className={`partido-fila partido-fila--${p.estado} partido-fila--clickable`}
+                          onClick={() => toggleExpandido(p.id)}
+                          role="button"
+                          aria-expanded={abierto}
+                        >
+                          <div className="partido-enfrentamiento">
+                            <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : (!p.equipo1 ? 'nombre-pendiente' : '')}>
+                              {p.equipo1?.nombre ?? 'Por definir'}
+                            </span>
+                            <span className="partido-resultado">
+                              {p.resultado_e1} – {p.resultado_e2}
+                            </span>
+                            <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : (!p.equipo2 ? 'nombre-pendiente' : '')}>
+                              {p.equipo2?.nombre ?? 'Por definir'}
+                            </span>
+                          </div>
+                          {deltaPropio !== null && (
+                            <span className={`partido-delta ${deltaPropio >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                              {deltaPropio >= 0 ? '+' : ''}{deltaPropio} ELO
+                            </span>
+                          )}
+                          <svg className={`partido-chevron ${abierto ? 'partido-chevron--abierto' : ''}`}
+                            viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
+                            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+
+                        {abierto && (
+                          <div className="partido-detalle">
+                            {[
+                              { equipo: eq1 ?? p.equipo1, delta: p.delta_elo_e1, esGanador: p.ganador_equipo_id === p.equipo1?.id },
+                              { equipo: eq2 ?? p.equipo2, delta: p.delta_elo_e2, esGanador: p.ganador_equipo_id === p.equipo2?.id },
+                            ].map(({ equipo, delta, esGanador }) => equipo && (
+                              <div key={equipo.id} className="partido-detalle-equipo">
+                                <div className="partido-detalle-equipo-header">
+                                  <span className={`partido-detalle-nombre ${esGanador ? 'partido-detalle-nombre--ganador' : ''}`}>
+                                    {esGanador && '🏆 '}{equipo.nombre}
+                                  </span>
+                                  {delta !== null && (
+                                    <span className={`partido-delta ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                      {delta >= 0 ? '+' : ''}{delta} ELO
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="partido-detalle-miembros">
+                                  {(equipo.miembros ?? []).map(m => {
+                                    const snap = (p.historial_elo ?? []).find(h => h.usuario_id === m.id)
+                                    return (
+                                      <div key={m.id} className="partido-detalle-miembro">
+                                        <span className="partido-detalle-miembro-nombre">{m.nombre}</span>
+                                        {snap ? (
+                                          <>
+                                            <span className="partido-detalle-elo-progresion">
+                                              {snap.elo_antes} → {snap.elo_despues}
+                                            </span>
+                                            <span className={`partido-delta partido-delta--sm ${snap.delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                              {snap.delta >= 0 ? '+' : ''}{snap.delta}
+                                            </span>
+                                          </>
+                                        ) : (
+                                          delta !== null && (
+                                            <span className={`partido-delta partido-delta--sm ${delta >= 0 ? 'partido-delta--pos' : 'partido-delta--neg'}`}>
+                                              {delta >= 0 ? '+' : ''}{delta} ELO
+                                            </span>
+                                          )
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                  {(!equipo.miembros || equipo.miembros.length === 0) && (
+                                    <span className="partido-detalle-sin-miembros">Sin miembros registrados</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))
+            })()}
           </div>
         )}
 
