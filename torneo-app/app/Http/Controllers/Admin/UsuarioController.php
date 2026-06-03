@@ -40,13 +40,7 @@ class UsuarioController extends Controller
 
     public function update(UpdateUsuarioRequest $request, Usuario $usuario)
     {
-        $data = $request->only(['nombre', 'email', 'elo', 'rol']);
-
-        if ($request->filled('contrasena')) {
-            $data['contrasena'] = $request->contrasena;
-        }
-
-        $usuario->update($data);
+        $usuario->update($request->only(['nombre', 'email', 'elo', 'rol']));
 
         return redirect()->route('admin.usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }

@@ -96,21 +96,16 @@ class EloService
         $raw1 = (int) round($k1 * ($resultado1 - $e1));
         $raw2 = (int) round($k2 * ($resultado2 - $e2));
 
-        // mínimo garantizado por fase para que llegar lejos siempre tenga peso
-        $distanciaFinal = $maxRonda - ($partido->ronda ?? 1);
-        $minGanador = match (true) {
-            $distanciaFinal === 0 => 10,  // final
-            $distanciaFinal === 1 => 7,   // semifinal
-            $distanciaFinal === 2 => 5,   // cuartos
-            default               => 3,   // rondas anteriores
-        };
+        // bonus por upset: si la diferencia de ELO es > 200 el underdog gana +5 extra
+        $diferencia = abs($eloTeam1 - $eloTeam2);
+        $bonusUpset = $diferencia > 200 ? 5 : 0;
 
         $delta1 = $resultado1 === 1.0
-            ? max($raw1, $minGanador)
-            : min($raw1, -1);
+            ? max($raw1, 10) + ($eloTeam1 < $eloTeam2 ? $bonusUpset : 0)
+            : max(min($raw1, -1), -15);
         $delta2 = $resultado2 === 1.0
-            ? max($raw2, $minGanador)
-            : min($raw2, -1);
+            ? max($raw2, 10) + ($eloTeam2 < $eloTeam1 ? $bonusUpset : 0)
+            : max(min($raw2, -1), -15);
 
         $deporteId = DB::table('torneos')->where('id', $partido->torneo_id)->value('deporte_id');
 

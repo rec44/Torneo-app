@@ -33,18 +33,6 @@
                 </div>
 
                 <div class="col-sm-6">
-                    <label class="form-label fw-semibold">Nueva contraseña <span class="text-muted fw-normal small">(opcional)</span></label>
-                    <input type="password" name="contrasena"
-                           class="form-control @error('contrasena') is-invalid @enderror">
-                    @error('contrasena') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="col-sm-6">
-                    <label class="form-label fw-semibold">Confirmar nueva contraseña</label>
-                    <input type="password" name="contrasena_confirmation" class="form-control">
-                </div>
-
-                <div class="col-sm-6">
                     <label class="form-label fw-semibold">ELO</label>
                     <input type="number" name="elo"
                            class="form-control @error('elo') is-invalid @enderror"
