@@ -417,8 +417,7 @@ class EquipoController extends Controller
             ->where('deporte_id', $torneo->deporte_id)
             ->value('elo');
 
-        // Si no hay ELO en este deporte usa el ELO global del usuario como base
-        return $eloDeporte ?? $usuario->elo;
+        return $eloDeporte ?? 500;
     }
 
     private function mensajeEloInvalido(int $elo, Torneo $torneo): ?string
