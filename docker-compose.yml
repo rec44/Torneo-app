@@ -30,6 +30,20 @@ services:
       - red
 
 
+  # ---------- QUEUE WORKER: procesa emails y jobs ----------
+  queue:
+    build: ./torneo-app
+    container_name: queue
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --timeout=90 --sleep=3
+    volumes:
+      - ./torneo-app:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - red
+
+
   # ---------- BASE DE DATOS: MySQL ----------
   db:
     image: mysql:8.0
