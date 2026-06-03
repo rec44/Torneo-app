@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { partidoService } from '../services/partidoService'
 
 export function ResultadoModal({ partido, onClose, onGuardado }) {
@@ -48,10 +48,10 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
   const esEdicion = partido.estado === 'finalizado'
 
   return (
-    <div className="modal-overlay" onMouseDown={onClose}>
-      <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
+    <div className="modal-fondo" onMouseDown={onClose}>
+      <div className="modal-tarjeta" onMouseDown={e => e.stopPropagation()}>
 
-        <div className="modal-header">
+        <div className="modal-cabecera">
           <h3 className="modal-titulo">
             {esEdicion ? 'Editar resultado' : 'Registrar resultado'}
           </h3>
@@ -62,14 +62,14 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className="modal-formulario">
 
           {/* Marcadores */}
-          <div className="modal-scores">
-            <div className="modal-score-equipo">
-              <span className="modal-score-nombre">{partido.equipo1?.nombre}</span>
+          <div className="modal-marcadores">
+            <div className="modal-marcador-equipo">
+              <span className="modal-marcador-nombre">{partido.equipo1?.nombre}</span>
               <input
-                className="modal-score-input"
+                className="modal-marcador-entrada"
                 type="number"
                 min="0"
                 value={res1}
@@ -80,12 +80,12 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
               />
             </div>
 
-            <span className="modal-score-sep">–</span>
+            <span className="modal-marcador-sep">–</span>
 
-            <div className="modal-score-equipo">
-              <span className="modal-score-nombre">{partido.equipo2?.nombre}</span>
+            <div className="modal-marcador-equipo">
+              <span className="modal-marcador-nombre">{partido.equipo2?.nombre}</span>
               <input
-                className="modal-score-input"
+                className="modal-marcador-entrada"
                 type="number"
                 min="0"
                 value={res2}
@@ -98,7 +98,7 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
 
           {/* Ganador */}
           <div className="modal-ganador">
-            <span className="modal-ganador-label">Ganador</span>
+            <span className="modal-ganador-etiqueta">Ganador</span>
             <div className="modal-ganador-opciones">
               <label className={`modal-ganador-chip ${ganadorId === partido.equipo1?.id ? 'modal-ganador-chip--activo' : ''}`}>
                 <input
@@ -126,10 +126,10 @@ export function ResultadoModal({ partido, onClose, onGuardado }) {
           {error && <p className="modal-error">{error}</p>}
 
           <div className="modal-acciones">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+            <button type="button" className="btn-secundario" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <button type="submit" className="btn-primario" disabled={loading}>
               {loading ? 'Guardando…' : 'Guardar resultado'}
             </button>
           </div>

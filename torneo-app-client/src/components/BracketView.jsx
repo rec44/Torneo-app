@@ -1,3 +1,14 @@
+﻿function BracketEscudo({ url, nombre }) {
+  if (!url) return null
+  return (
+    <img
+      src={url}
+      alt={nombre ?? ''}
+      className="bracket-escudo"
+    />
+  )
+}
+
 function PartidoBracket({ partido, esOrganizador, onPartidoClick, torneoFinalizado }) {
   const finalizado  = partido.estado === 'finalizado'
   const ganadorId   = partido.ganador_equipo_id
@@ -5,20 +16,26 @@ function PartidoBracket({ partido, esOrganizador, onPartidoClick, torneoFinaliza
 
   return (
     <div
-      className={`bracket-partido ${clickable ? 'bracket-partido--clickable' : ''}`}
+      className={`bracket-partido ${clickable ? 'bracket-partido--seleccionable' : ''}`}
       onClick={clickable ? () => onPartidoClick(partido) : undefined}
       title={clickable ? (finalizado ? 'Editar resultado' : 'Registrar resultado') : undefined}
     >
       <div className={`bracket-jugador ${finalizado && ganadorId === partido.equipo1?.id ? 'bracket-jugador--ganador' : ''} ${finalizado && ganadorId !== partido.equipo1?.id ? 'bracket-jugador--perdedor' : ''}`}>
-        <span>{partido.equipo1?.nombre ?? 'TBD'}</span>
-        {finalizado && <span className="bracket-score">{partido.resultado_e1}</span>}
+        <span className="bracket-jugador-izq">
+          <BracketEscudo url={partido.equipo1?.escudo_url} nombre={partido.equipo1?.nombre} />
+          <span className={!partido.equipo1 ? 'nombre-pendiente' : ''}>{partido.equipo1?.nombre ?? 'Por definir'}</span>
+        </span>
+        {finalizado && <span className="bracket-marcador">{partido.resultado_e1}</span>}
       </div>
       <div className={`bracket-jugador ${finalizado && ganadorId === partido.equipo2?.id ? 'bracket-jugador--ganador' : ''} ${finalizado && ganadorId !== partido.equipo2?.id ? 'bracket-jugador--perdedor' : ''}`}>
-        <span>{partido.equipo2?.nombre ?? 'TBD'}</span>
-        {finalizado && <span className="bracket-score">{partido.resultado_e2}</span>}
+        <span className="bracket-jugador-izq">
+          <BracketEscudo url={partido.equipo2?.escudo_url} nombre={partido.equipo2?.nombre} />
+          <span className={!partido.equipo2 ? 'nombre-pendiente' : ''}>{partido.equipo2?.nombre ?? 'Por definir'}</span>
+        </span>
+        {finalizado && <span className="bracket-marcador">{partido.resultado_e2}</span>}
       </div>
       {clickable && (
-        <div className="bracket-partido-edit-hint">
+        <div className="bracket-partido-pista-edicion">
           {finalizado ? 'Editar' : 'Resultado'}
         </div>
       )}
@@ -66,7 +83,7 @@ function EliminacionView({ partidos, esOrganizador, onPartidoClick, torneoFinali
     <div className="bracket-eliminacion">
       {Object.keys(rondas).sort((a, b) => Number(a) - Number(b)).map((ronda) => (
         <div key={ronda} className="bracket-ronda">
-          <div className="bracket-ronda-label">{etiquetaRonda(Number(ronda))}</div>
+          <div className="bracket-ronda-etiqueta">{etiquetaRonda(Number(ronda))}</div>
           <div className="bracket-ronda-partidos">
             {rondas[ronda].map((partido) => (
               <PartidoBracket

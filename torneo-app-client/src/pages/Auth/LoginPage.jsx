@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../../hooks/useAuth'
 import './AuthPage.css'
 
 export function LoginPage() {
@@ -40,22 +40,22 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-card-header">
+    <div className="pag-auth">
+      <div className="tarjeta-auth">
+        <div className="tarjeta-auth-cabecera">
           <h2>Iniciar sesión</h2>
         </div>
 
-        {error && <div className="auth-error-general">{error}</div>}
+        {error && <div className="error-general-auth">{error}</div>}
 
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <div className="auth-field">
-            <label htmlFor="email" className="auth-label">Email</label>
+        <form className="formulario-auth" onSubmit={handleSubmit} noValidate>
+          <div className="campo-auth">
+            <label htmlFor="email" className="etiqueta-auth">Email</label>
             <input
               id="email"
               name="email"
               type="email"
-              className="auth-input"
+              className="entrada-auth"
               value={form.email}
               onChange={handleChange}
               placeholder="tu@email.com"
@@ -64,13 +64,13 @@ export function LoginPage() {
             />
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="contrasena" className="auth-label">Contraseña</label>
+          <div className="campo-auth">
+            <label htmlFor="contrasena" className="etiqueta-auth">Contraseña</label>
             <input
               id="contrasena"
               name="contrasena"
               type="password"
-              className="auth-input"
+              className="entrada-auth"
               value={form.contrasena}
               onChange={handleChange}
               placeholder="••••••••"
@@ -79,12 +79,12 @@ export function LoginPage() {
             />
           </div>
 
-          <button type="submit" className="auth-btn-submit" disabled={cargando}>
+          <button type="submit" className="btn-auth-enviar" disabled={cargando}>
             {cargando ? 'Entrando...' : 'Iniciar sesión'}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p className="auth-pie">
           ¿No tienes cuenta?{' '}
           <Link to="/register">Regístrate</Link>
         </p>

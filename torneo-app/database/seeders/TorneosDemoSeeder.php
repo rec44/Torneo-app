@@ -5,14 +5,12 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Crea 3 torneos single elimination de demostración:
- *   1. "Valencia Cup"      — abierto,    inscripción completa, sin partidos
- *   2. "Riverside Masters" — en_curso,   cuartos terminados, semis pendientes
- *   3. "Highlands Open"    — finalizado, bracket completo con campeón
- *
- * Compatible con migrate:fresh --seed (no depende de IDs ni ELOs concretos).
- */
+// 4 torneos de prueba para ver la app en acción:
+//   1. Valencia Cup       - abierto, equipos ya casi completos
+//   2. Riverside Masters  - en curso, semis pendientes
+//   3. Highlands Open     - finalizado con campeón
+//   4. Team Cup           - abierto con equipos de 2 jugadores
+// funciona con migrate:fresh --seed, no hardcodea IDs ni ELOs
 class TorneosDemoSeeder extends Seeder
 {
     public function run(): void
@@ -23,12 +21,10 @@ class TorneosDemoSeeder extends Seeder
         $this->torneo4_TeamCup();
     }
 
-    // -------------------------------------------------------------------------
-    // Torneo 4 — Team Cup (abierto, 4 equipos de 2 miembros, todos bloqueados y completo)
-    // -------------------------------------------------------------------------
+    // Torneo 4 — Team Cup
     private function torneo4_TeamCup(): void
     {
-        $creadorId = 1; // admin crea este torneo; así los demás usuarios quedan libres
+        $creadorId = 1; // lo crea el admin para dejar libres a los otros usuarios
 
         $torneoId = DB::table('torneos')->insertGetId([
             'nombre'        => 'Team Cup',
@@ -50,7 +46,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
-        // Coger 8 usuarios (excluir al admin=creador) con mayor ELO
+        // cogemos los 8 con más ELO (sin contar al admin)
         $usuarios = DB::table('usuarios')
             ->where('id', '!=', $creadorId)
             ->orderByDesc('elo')
@@ -59,7 +55,7 @@ class TorneosDemoSeeder extends Seeder
 
         $nombresEquipos = ['Alpha Squad', 'Beta Force', 'Gamma Strike', 'Delta Unit'];
 
-        // Crear 4 equipos con 2 miembros cada uno, todos bloqueados (completos)
+        // 4 equipos de 2, todos bloqueados y listos para iniciar
         foreach ($nombresEquipos as $i => $nombre) {
             $capitan  = $usuarios[$i * 2];
             $miembro2 = $usuarios[$i * 2 + 1];
@@ -82,16 +78,13 @@ class TorneosDemoSeeder extends Seeder
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Helper: crea 8 equipos para un torneo cogiendo los usuarios con mayor ELO
-    // (excluye al creador). Devuelve [seed => equipo_id].
-    // $bloqueadoSeeds: semillas que deben tener bloqueado = true.
-    // -------------------------------------------------------------------------
-    private function crearEquipos(int $torneoId, array $nombres, int $excluirId, array $bloqueadoSeeds = [], int $miembrosPorEquipo = 1): array
+    // helper para crear equipos con los usuarios de más ELO
+    // $bloqueadoSeeds: qué semillas quedan con bloqueado=true
+    private function crearEquipos(int $torneoId, array $nombres, int|array $excluirId, array $bloqueadoSeeds = [], int $miembrosPorEquipo = 1): array
     {
         $numEquipos    = count($nombres);
         $participantes = DB::table('usuarios')
-            ->where('id', '!=', $excluirId)
+            ->whereNotIn('id', (array) $excluirId)
             ->orderByDesc('elo')
             ->limit($numEquipos * $miembrosPorEquipo)
             ->get(['id', 'elo']);
@@ -132,12 +125,10 @@ class TorneosDemoSeeder extends Seeder
         return $seedToId;
     }
 
-    // -------------------------------------------------------------------------
-    // Torneo 1 — Valencia Cup (abierto, a punto de empezar, sin partidos)
-    // -------------------------------------------------------------------------
+    // Torneo 1 — Valencia Cup
     private function torneo1_ValenciaCup(): void
     {
-        $creadorId = 2; // usuario fijo "user", siempre ID 2 tras UsuarioSeeder
+        $creadorId = 2; // "user", siempre ID 2 después del UsuarioSeeder
 
         $torneoId = DB::table('torneos')->insertGetId([
             'nombre'        => 'Valencia Cup',
@@ -159,7 +150,10 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
-        // Seeds 1, 2, 3, 5 bloqueados: esos equipos cerraron sus inscripciones
+        // seeds 1,2,3,5 ya cerraron inscripciones
+        $userId   = DB::table('usuarios')->where('email', 'user@example.com')->value('id');
+        $sergioId = DB::table('usuarios')->where('email', 'sergio@example.com')->value('id');
+
         $this->crearEquipos($torneoId, [
             'Valencia Tigers',
             'Sun Kings',
@@ -169,17 +163,15 @@ class TorneosDemoSeeder extends Seeder
             'Blue Waves',
             'Orange Crush',
             'Valencia Rovers',
-        ], $creadorId, [1, 2, 3, 5], 2);
+        ], [$creadorId, $userId, $sergioId], [1, 2, 3, 5], 2);
 
-        // Sin partidos: el bracket se genera cuando el torneo empiece
+        // sin partidos todavía, el bracket se genera al iniciar
     }
 
-    // -------------------------------------------------------------------------
-    // Torneo 2 — Riverside Masters (en_curso, cuartos terminados, semis pendientes)
-    // -------------------------------------------------------------------------
+    // Torneo 2 — Riverside Masters
     private function torneo2_RiversideMasters(): void
     {
-        $creadorId = 2; // user
+        $creadorId = 2; // "user"
 
         $torneoId = DB::table('torneos')->insertGetId([
             'nombre'        => 'Riverside Masters',
@@ -201,7 +193,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
-        // Torneo en curso: todos los equipos bloqueados (nadie puede unirse ya)
+        // torneo en marcha, todos bloqueados
         $s = $this->crearEquipos($torneoId, [
             'Riverside Lions',
             'River Stars',
@@ -213,9 +205,9 @@ class TorneosDemoSeeder extends Seeder
             'Bayou Squad',
         ], $creadorId, [1, 2, 3, 4, 5, 6, 7, 8]);
 
-        // Ronda 1 (Cuartos) — bracket 1v8, 4v5, 3v6, 2v7, todos finalizados
+        // cuartos finalizados: 1v8, 4v5, 3v6, 2v7
         $cuartos = [
-            // [seed_e1, seed_e2, seed_ganador, res_e1, res_e2]
+            // [seed_e1, seed_e2, ganador, res_e1, res_e2]
             [1, 8, 1, '2', '0'],
             [4, 5, 4, '2', '1'],
             [3, 6, 3, '2', '0'],
@@ -240,7 +232,7 @@ class TorneosDemoSeeder extends Seeder
             $ganadores[] = $s[$c[2]];
         }
 
-        // Ronda 2 (Semis) — pendientes con equipos asignados
+        // semis pendientes, equipos ya asignados
         DB::table('partidos')->insert([
             [
                 'torneo_id' => $torneoId, 'equipo1_id' => $ganadores[0], 'equipo2_id' => $ganadores[1],
@@ -258,7 +250,7 @@ class TorneosDemoSeeder extends Seeder
             ],
         ]);
 
-        // Ronda 3 (Final) — TBD
+        // final, TBD
         DB::table('partidos')->insert([
             'torneo_id' => $torneoId, 'equipo1_id' => null, 'equipo2_id' => null,
             'ganador_equipo_id' => null, 'resultado_e1' => null, 'resultado_e2' => null,
@@ -268,12 +260,10 @@ class TorneosDemoSeeder extends Seeder
         ]);
     }
 
-    // -------------------------------------------------------------------------
-    // Torneo 3 — Highlands Open (finalizado, bracket completo)
-    // -------------------------------------------------------------------------
+    // Torneo 3 — Highlands Open
     private function torneo3_HighlandsOpen(): void
     {
-        $creadorId = 2; // usuario "user"
+        $creadorId = 2; // "user"
 
         $torneoId = DB::table('torneos')->insertGetId([
             'nombre'        => 'Highlands Open',
@@ -295,7 +285,7 @@ class TorneosDemoSeeder extends Seeder
             'updated_at'    => now(),
         ]);
 
-        // Torneo finalizado: todos bloqueados
+        // finalizado, todos bloqueados
         $s = $this->crearEquipos($torneoId, [
             'Highland Thunder',
             'Glen Blaze',
@@ -307,9 +297,9 @@ class TorneosDemoSeeder extends Seeder
             'Brae Rovers',
         ], $creadorId, [1, 2, 3, 4, 5, 6, 7, 8]);
 
-        // Ronda 1 (Cuartos) — todos finalizados
+        // cuartos, todos finalizados
         $cuartos = [
-            // [seed_e1, seed_e2, seed_ganador, res_e1, res_e2, dias_atrás]
+            // [seed_e1, seed_e2, ganador, res_e1, res_e2, días_atrás]
             [1, 8, 1, '3', '1', 13],
             [4, 5, 4, '3', '2', 13],
             [3, 6, 3, '3', '0', 12],
@@ -334,9 +324,9 @@ class TorneosDemoSeeder extends Seeder
             $ganCuartos[] = $s[$c[2]];
         }
 
-        // Ronda 2 (Semis) — seed 3 elimina al seed 2 (sorpresa)
+        // semis — el seed 3 elimina al 2, surprise!
         $semis = [
-            // [eq1, eq2, ganador, res_e1, res_e2, dias_atrás]
+            // [eq1, eq2, ganador, res_e1, res_e2, días_atrás]
             [$ganCuartos[0], $ganCuartos[1], $ganCuartos[0], '3', '2', 8],
             [$ganCuartos[2], $ganCuartos[3], $ganCuartos[2], '3', '2', 8],
         ];
@@ -359,7 +349,7 @@ class TorneosDemoSeeder extends Seeder
             $ganSemis[] = $s2[2];
         }
 
-        // Ronda 3 (Final) — seed 1 campeón
+        // final — gana el seed 1
         DB::table('partidos')->insert([
             'torneo_id'         => $torneoId,
             'equipo1_id'        => $ganSemis[0],

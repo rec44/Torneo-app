@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { usuarioService } from '../services/usuarioService'
-import { TorneoCard } from '../components/TorneoCard'
+import { useAuth } from '../../hooks/useAuth'
+import { usuarioService } from '../../services/usuarioService'
+import { TorneoCard } from '../../components/TorneoCard'
 import './PerfilPage.css'
 
 const esFinalizado = t => t.estado === 'finalizado'
@@ -14,15 +14,15 @@ function SeccionHistorial({ titulo, torneos, vacio, navigate, loading }) {
 
   if (loading) return (
     <section className="perfil-seccion">
-      <div className="perfil-seccion-header">
+      <div className="perfil-seccion-cabecera">
         <h2 className="perfil-seccion-titulo">{titulo}</h2>
       </div>
-      <div className="perfil-scroll-h">
+      <div className="perfil-desplazamiento-h">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="torneo-card torneo-card--skeleton">
-            <div className="skeleton-line skeleton-line--short" />
-            <div className="skeleton-line skeleton-line--title" />
-            <div className="skeleton-line" />
+          <div key={i} className="tarjeta-torneo tarjeta-torneo--esqueleto">
+            <div className="linea-esqueleto linea-esqueleto--corta" />
+            <div className="linea-esqueleto linea-esqueleto--titulo" />
+            <div className="linea-esqueleto" />
           </div>
         ))}
       </div>
@@ -31,7 +31,7 @@ function SeccionHistorial({ titulo, torneos, vacio, navigate, loading }) {
 
   return (
     <section className="perfil-seccion">
-      <div className="perfil-seccion-header">
+      <div className="perfil-seccion-cabecera">
         <h2 className="perfil-seccion-titulo">{titulo}</h2>
       </div>
 
@@ -39,7 +39,7 @@ function SeccionHistorial({ titulo, torneos, vacio, navigate, loading }) {
         <p className="perfil-vacio">{vacio}</p>
       ) : (
         <>
-          <div className="perfil-scroll-h">
+          <div className="perfil-desplazamiento-h">
             {mostrados.map(t => (
               <TorneoCard key={t.id} torneo={t} onVerDetalle={id => navigate(`/torneos/${id}`)} />
             ))}
@@ -94,15 +94,15 @@ export function PerfilPage() {
       )}
 
       {/* ── Header ── */}
-      <header className="perfil-header">
+      <header className="perfil-cabecera">
         <div className="perfil-avatar">{perfil?.nombre?.[0]?.toUpperCase() ?? '?'}</div>
-        <div className="perfil-header-info">
+        <div className="perfil-cabecera-info">
           <h1 className="perfil-nombre">{perfil?.nombre}</h1>
           {esPropio && <p className="perfil-email">{perfil?.email}</p>}
-          <div className="perfil-header-badges">
-            <span className="perfil-elo-badge">ELO {eloGlobal}</span>
+          <div className="perfil-cabecera-insignias">
+            <span className="perfil-elo-insignia">ELO {eloGlobal}</span>
             {elosDeporte.map(e => (
-              <span key={e.deporte_id} className="perfil-deporte-tag">
+              <span key={e.deporte_id} className="perfil-deporte-etiqueta">
                 {e.deporte?.nombre} · {e.elo}
               </span>
             ))}
@@ -111,20 +111,20 @@ export function PerfilPage() {
       </header>
 
       {/* ── Stats ── */}
-      <div className="perfil-stats-row">
-        <div className="perfil-stat">
-          <span className="perfil-stat-valor">{torneosInscritos.length}</span>
-          <span className="perfil-stat-label">Participados</span>
+      <div className="perfil-estadisticas-row">
+        <div className="perfil-estadistica">
+          <span className="perfil-estadistica-valor">{torneosInscritos.length}</span>
+          <span className="perfil-estadistica-etiqueta">Participados</span>
         </div>
-        <div className="perfil-stat-divider" />
-        <div className="perfil-stat">
-          <span className="perfil-stat-valor">{torneosCreados.length}</span>
-          <span className="perfil-stat-label">Organizados</span>
+        <div className="perfil-estadistica-divisor" />
+        <div className="perfil-estadistica">
+          <span className="perfil-estadistica-valor">{torneosCreados.length}</span>
+          <span className="perfil-estadistica-etiqueta">Organizados</span>
         </div>
-        <div className="perfil-stat-divider" />
-        <div className="perfil-stat">
-          <span className="perfil-stat-valor">{perfil?.torneos_ganados ?? 0}</span>
-          <span className="perfil-stat-label">Ganados</span>
+        <div className="perfil-estadistica-divisor" />
+        <div className="perfil-estadistica">
+          <span className="perfil-estadistica-valor">{perfil?.torneos_ganados ?? 0}</span>
+          <span className="perfil-estadistica-etiqueta">Ganados</span>
         </div>
       </div>
 
@@ -132,15 +132,15 @@ export function PerfilPage() {
 
       {/* ── ELO por deporte ── */}
       <section className="perfil-seccion">
-        <div className="perfil-seccion-header">
+        <div className="perfil-seccion-cabecera">
           <h2 className="perfil-seccion-titulo">ELO por deporte</h2>
         </div>
 
-        <div className="perfil-elo-section">
-          <div className="perfil-elo-global-card">
+        <div className="perfil-elo-seccion">
+          <div className="perfil-elo-global-tarjeta">
             <div>
-              <span className="perfil-elo-global-label">ELO global</span>
-              <span className="perfil-elo-global-desc">Media de los deportes · solo informativo</span>
+              <span className="perfil-elo-global-etiqueta">ELO global</span>
+              <span className="perfil-elo-global-descripcion">Media de los deportes · solo informativo</span>
             </div>
             <span className="perfil-elo-global-valor">{eloGlobal}</span>
           </div>

@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CrearInvitacionRequest;
 use App\Http\Requests\StoreEquipoRequest;
 use App\Http\Requests\UnirsePorCodigoRequest;
+use App\Http\Resources\EquipoResource;
+use App\Http\Resources\InvitacionResource;
 use App\Models\Equipo;
 use App\Models\InvitacionTorneo;
 use App\Models\Torneo;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -25,13 +28,13 @@ class EquipoController extends Controller
             ->withCount('miembros')
             ->get();
 
-        return response()->json($equipos);
+        return response()->json(EquipoResource::collection($equipos));
     }
 
     public function store(StoreEquipoRequest $request, Torneo $torneo): JsonResponse
     {
-        $usuario     = $request->user();
-        $esDueno     = $usuario->id === $torneo->creado_por || $usuario->rol === 'admin';
+        $usuario = $request->user();
+        $esDueno = $usuario->id === $torneo->creado_por || $usuario->rol === 'admin';
 
         if ($torneo->estado !== 'abierto') {
             return response()->json(['message' => 'El torneo no está abierto para inscripciones.'], 422);
@@ -44,7 +47,7 @@ class EquipoController extends Controller
         }
 
         $yaEnEquipo = Equipo::where('torneo_id', $torneo->id)
-            ->whereHas('miembros', fn($q) => $q->where('usuario_id', $usuario->id))
+            ->whereHas('miembros', fn ($q) => $q->where('usuario_id', $usuario->id))
             ->exists();
 
         if (! $esDueno && $yaEnEquipo) {
@@ -63,7 +66,6 @@ class EquipoController extends Controller
             'capitan_id' => $usuario->id,
         ]);
 
-        // Se une como capitán si todavía no pertenece a ningún equipo del torneo
         if (! $yaEnEquipo) {
             $elo = $this->eloEfectivo($usuario, $torneo);
 
@@ -77,13 +79,12 @@ class EquipoController extends Controller
             $equipo->miembros()->attach($usuario->id, ['elo_al_unirse' => $elo]);
         }
 
-        return response()->json(
-            $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'),
-            201
-        );
+        return (new EquipoResource(
+            $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo')
+        ))->response()->setStatusCode(201);
     }
 
-    public function show(Torneo $torneo, Equipo $equipo): JsonResponse
+    public function show(Torneo $torneo, Equipo $equipo): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
@@ -91,7 +92,7 @@ class EquipoController extends Controller
 
         $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo');
 
-        return response()->json($equipo);
+        return new EquipoResource($equipo);
     }
 
     public function destroy(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
@@ -120,29 +121,26 @@ class EquipoController extends Controller
         return response()->json(null, 204);
     }
 
-    public function update(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
+    public function update(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
         }
 
-        $esDueno  = $request->user()->id === $torneo->creado_por || $request->user()->rol === 'admin';
+        $esDueno   = $request->user()->id === $torneo->creado_por || $request->user()->rol === 'admin';
         $esCapitan = $request->user()->id === $equipo->capitan_id;
 
         if (! $esDueno && ! $esCapitan) {
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $data = $request->validate([
-            'nombre' => 'required|string|max:100',
-        ]);
-
+        $data = $request->validate(['nombre' => 'required|string|max:100']);
         $equipo->update($data);
 
-        return response()->json($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
+        return new EquipoResource($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
     }
 
-    public function updateEscudo(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
+    public function updateEscudo(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
@@ -158,7 +156,7 @@ class EquipoController extends Controller
         $request->validate([
             'escudo' => ['required', 'file', 'max:2048', function ($attr, $value, $fail) {
                 $ext = strtolower($value->getClientOriginalExtension());
-                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
                     $fail('El escudo debe ser una imagen (jpg, jpeg, png o webp).');
                 }
             }],
@@ -171,7 +169,7 @@ class EquipoController extends Controller
         $path = $request->file('escudo')->store('escudos/equipos', 'public');
         $equipo->update(['escudo' => $path]);
 
-        return response()->json($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
+        return new EquipoResource($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
     }
 
     public function unirse(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
@@ -191,7 +189,7 @@ class EquipoController extends Controller
         }
 
         $yaEnEquipo = Equipo::where('torneo_id', $torneo->id)
-            ->whereHas('miembros', fn($q) => $q->where('usuario_id', $usuario->id))
+            ->whereHas('miembros', fn ($q) => $q->where('usuario_id', $usuario->id))
             ->exists();
 
         if ($yaEnEquipo) {
@@ -235,7 +233,12 @@ class EquipoController extends Controller
         return response()->json([
             'codigo'  => $invitacion->codigo,
             'vigente' => $invitacion->estaVigente(),
-            'torneo'  => $invitacion->torneo,
+            'torneo'  => [
+                'id'      => $invitacion->torneo->id,
+                'nombre'  => $invitacion->torneo->nombre,
+                'estado'  => $invitacion->torneo->estado,
+                'deporte' => $invitacion->torneo->deporte?->nombre,
+            ],
             'equipo'  => [
                 'id'             => $invitacion->equipo->id,
                 'nombre'         => $invitacion->equipo->nombre,
@@ -244,7 +247,7 @@ class EquipoController extends Controller
         ]);
     }
 
-    public function mostrarInvitacion(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
+    public function mostrarInvitacion(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
@@ -260,13 +263,13 @@ class EquipoController extends Controller
         $invitacion = InvitacionTorneo::where('torneo_id', $torneo->id)
             ->where('equipo_id', $equipo->id)
             ->get()
-            ->first(fn($inv) => $inv->estaVigente());
+            ->first(fn ($inv) => $inv->estaVigente());
 
         if (! $invitacion) {
             return response()->json(null, 204);
         }
 
-        return response()->json($invitacion);
+        return new InvitacionResource($invitacion);
     }
 
     public function crearInvitacion(CrearInvitacionRequest $request, Torneo $torneo, Equipo $equipo): JsonResponse
@@ -292,10 +295,10 @@ class EquipoController extends Controller
             'expira_en' => $data['expira_en'] ?? null,
         ]);
 
-        return response()->json($invitacion, 201);
+        return (new InvitacionResource($invitacion))->response()->setStatusCode(201);
     }
 
-    public function expulsarMiembro(Request $request, Torneo $torneo, Equipo $equipo, Usuario $miembro): JsonResponse
+    public function expulsarMiembro(Request $request, Torneo $torneo, Equipo $equipo, Usuario $miembro): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
@@ -314,12 +317,10 @@ class EquipoController extends Controller
 
         $equipo->miembros()->detach($miembro->id);
 
-        return response()->json(
-            $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo')
-        );
+        return new EquipoResource($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
     }
 
-    public function toggleLock(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse
+    public function toggleLock(Request $request, Torneo $torneo, Equipo $equipo): JsonResponse|JsonResource
     {
         if ($equipo->torneo_id !== $torneo->id) {
             return response()->json(['message' => 'El equipo no pertenece a este torneo.'], 404);
@@ -349,7 +350,7 @@ class EquipoController extends Controller
             $equipo->update(['bloqueado' => false]);
         }
 
-        return response()->json($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
+        return new EquipoResource($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'));
     }
 
     public function unirsePorCodigo(UnirsePorCodigoRequest $request): JsonResponse
@@ -377,7 +378,7 @@ class EquipoController extends Controller
         }
 
         $yaEnEquipo = Equipo::where('torneo_id', $torneo->id)
-            ->whereHas('miembros', fn($q) => $q->where('usuario_id', $usuario->id))
+            ->whereHas('miembros', fn ($q) => $q->where('usuario_id', $usuario->id))
             ->exists();
 
         if ($yaEnEquipo) {
@@ -405,12 +406,10 @@ class EquipoController extends Controller
 
         return response()->json([
             'message' => 'Te has unido al equipo mediante invitación.',
-            'equipo'  => $equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo'),
+            'equipo'  => new EquipoResource($equipo->load('capitan:id,nombre', 'miembros:id,nombre,elo')),
         ]);
     }
 
-    // Devuelve el ELO del usuario específico para el deporte del torneo.
-    // Si no tiene historial en ese deporte, usa el ELO global.
     private function eloEfectivo(Usuario $usuario, Torneo $torneo): int
     {
         $eloDeporte = DB::table('elo_usuario_deporte')

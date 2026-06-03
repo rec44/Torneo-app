@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { useTorneo } from '../hooks/useTorneo'
-import { torneoService } from '../services/torneoService'
-import './CrearTorneoPage.css'
+import { useTorneo } from '../../hooks/useTorneo'
+import { torneoService } from '../../services/torneoService'
+import '../CrearTorneoPage/CrearTorneoPage.css'
 
 const TAMANIOS_BRACKET = [2, 4, 8, 16, 32]
 
@@ -81,9 +81,9 @@ export function EditarTorneoPage() {
       <div className="crear-torneo-page">
         <div className="crear-torneo-container">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 32 }}>
-            <div className="skeleton-line skeleton-line--short" />
-            <div className="skeleton-line skeleton-line--title" />
-            <div className="skeleton-line" />
+            <div className="linea-esqueleto linea-esqueleto--corta" />
+            <div className="linea-esqueleto linea-esqueleto--titulo" />
+            <div className="linea-esqueleto" />
           </div>
         </div>
       </div>
@@ -119,11 +119,11 @@ export function EditarTorneoPage() {
         </div>
 
         {/* Info de solo lectura */}
-        <div className="editar-readonly-info">
+        <div className="editar-solo-lectura-info">
           {torneo.deporte && (
-            <span className="editar-readonly-tag">{torneo.deporte.nombre}</span>
+            <span className="editar-solo-lectura-etiqueta">{torneo.deporte.nombre}</span>
           )}
-          <span className="editar-readonly-tag editar-readonly-tag--formato">
+          <span className="editar-solo-lectura-etiqueta editar-solo-lectura-etiqueta--formato">
             {{
               eliminacion_simple: 'Eliminación directa',
               eliminacion_doble:  'Doble eliminación',
@@ -134,46 +134,46 @@ export function EditarTorneoPage() {
         </div>
 
         {errorGeneral && (
-          <div className="form-error-general">{errorGeneral}</div>
+          <div className="error-general-formulario">{errorGeneral}</div>
         )}
 
-        <form className="crear-torneo-form" onSubmit={handleSubmit} noValidate>
+        <form className="crear-torneo-formulario" onSubmit={handleSubmit} noValidate>
 
           {/* ── Información básica ─────────────────────── */}
-          <fieldset className="form-section">
-            <legend className="form-section-title">Información básica</legend>
+          <fieldset className="seccion-formulario">
+            <legend className="seccion-formulario-titulo">Información básica</legend>
 
-            <div className="form-field">
-              <label htmlFor="nombre" className="form-label">
-                Nombre del torneo <span className="form-required">*</span>
+            <div className="campo-formulario">
+              <label htmlFor="nombre" className="etiqueta-formulario">
+                Nombre del torneo <span className="requerido">*</span>
               </label>
               <input
                 id="nombre"
                 name="nombre"
                 type="text"
-                className={'form-input' + (errores.nombre ? ' form-input--error' : '')}
+                className={'entrada-formulario' + (errores.nombre ? ' entrada-formulario--error' : '')}
                 value={form.nombre}
                 onChange={handleChange}
                 maxLength={255}
                 required
               />
-              {errores.nombre && <p className="form-field-error">{errores.nombre[0]}</p>}
+              {errores.nombre && <p className="error-campo-formulario">{errores.nombre[0]}</p>}
             </div>
           </fieldset>
 
           {/* ── Configuración ──────────────────────────── */}
-          <fieldset className="form-section">
-            <legend className="form-section-title">Configuración</legend>
+          <fieldset className="seccion-formulario">
+            <legend className="seccion-formulario-titulo">Configuración</legend>
 
-            <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="max_jugadores" className="form-label">
-                  Número de equipos <span className="form-required">*</span>
+            <div className="fila-formulario">
+              <div className="campo-formulario">
+                <label htmlFor="max_jugadores" className="etiqueta-formulario">
+                  Número de equipos <span className="requerido">*</span>
                 </label>
                 <select
                   id="max_jugadores"
                   name="max_jugadores"
-                  className={'form-select' + (errores.max_jugadores ? ' form-input--error' : '')}
+                  className={'selector-formulario' + (errores.max_jugadores ? ' entrada-formulario--error' : '')}
                   value={form.max_jugadores}
                   onChange={handleChange}
                   required
@@ -183,124 +183,124 @@ export function EditarTorneoPage() {
                     <option key={n} value={n}>{n} equipos</option>
                   ))}
                 </select>
-                {errores.max_jugadores && <p className="form-field-error">{errores.max_jugadores[0]}</p>}
+                {errores.max_jugadores && <p className="error-campo-formulario">{errores.max_jugadores[0]}</p>}
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="min_miembros" className="form-label">
+            <div className="fila-formulario">
+              <div className="campo-formulario">
+                <label htmlFor="min_miembros" className="etiqueta-formulario">
                   Mín. miembros por equipo
                 </label>
                 <input
                   id="min_miembros"
                   name="min_miembros"
                   type="number"
-                  className={'form-input' + (errores.min_miembros ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.min_miembros ? ' entrada-formulario--error' : '')}
                   value={form.min_miembros}
                   onChange={handleChange}
                   min={1}
                 />
-                {errores.min_miembros && <p className="form-field-error">{errores.min_miembros[0]}</p>}
+                {errores.min_miembros && <p className="error-campo-formulario">{errores.min_miembros[0]}</p>}
               </div>
 
-              <div className="form-field">
-                <label htmlFor="max_miembros" className="form-label">
-                  Máx. miembros por equipo <span className="form-hint">(opcional)</span>
+              <div className="campo-formulario">
+                <label htmlFor="max_miembros" className="etiqueta-formulario">
+                  Máx. miembros por equipo <span className="ayuda-formulario">(opcional)</span>
                 </label>
                 <input
                   id="max_miembros"
                   name="max_miembros"
                   type="number"
-                  className={'form-input' + (errores.max_miembros ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.max_miembros ? ' entrada-formulario--error' : '')}
                   value={form.max_miembros}
                   onChange={handleChange}
                   min={form.min_miembros || 1}
                   placeholder="Sin límite"
                 />
-                {errores.max_miembros && <p className="form-field-error">{errores.max_miembros[0]}</p>}
+                {errores.max_miembros && <p className="error-campo-formulario">{errores.max_miembros[0]}</p>}
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="elo_minimo" className="form-label">
-                  ELO mínimo <span className="form-hint">(opcional)</span>
+            <div className="fila-formulario">
+              <div className="campo-formulario">
+                <label htmlFor="elo_minimo" className="etiqueta-formulario">
+                  ELO mínimo <span className="ayuda-formulario">(opcional)</span>
                 </label>
                 <input
                   id="elo_minimo"
                   name="elo_minimo"
                   type="number"
-                  className={'form-input' + (errores.elo_minimo ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.elo_minimo ? ' entrada-formulario--error' : '')}
                   value={form.elo_minimo}
                   onChange={handleChange}
                   min={0}
                   placeholder="Sin límite"
                 />
-                {errores.elo_minimo && <p className="form-field-error">{errores.elo_minimo[0]}</p>}
+                {errores.elo_minimo && <p className="error-campo-formulario">{errores.elo_minimo[0]}</p>}
               </div>
 
-              <div className="form-field">
-                <label htmlFor="elo_maximo" className="form-label">
-                  ELO máximo <span className="form-hint">(opcional)</span>
+              <div className="campo-formulario">
+                <label htmlFor="elo_maximo" className="etiqueta-formulario">
+                  ELO máximo <span className="ayuda-formulario">(opcional)</span>
                 </label>
                 <input
                   id="elo_maximo"
                   name="elo_maximo"
                   type="number"
-                  className={'form-input' + (errores.elo_maximo ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.elo_maximo ? ' entrada-formulario--error' : '')}
                   value={form.elo_maximo}
                   onChange={handleChange}
                   min={0}
                   placeholder="Sin límite"
                 />
-                {errores.elo_maximo && <p className="form-field-error">{errores.elo_maximo[0]}</p>}
+                {errores.elo_maximo && <p className="error-campo-formulario">{errores.elo_maximo[0]}</p>}
               </div>
             </div>
           </fieldset>
 
           {/* ── Fechas ─────────────────────────────────── */}
-          <fieldset className="form-section">
-            <legend className="form-section-title">
-              Fechas <span className="form-hint">(opcionales)</span>
+          <fieldset className="seccion-formulario">
+            <legend className="seccion-formulario-titulo">
+              Fechas <span className="ayuda-formulario">(opcionales)</span>
             </legend>
 
-            <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="fecha_inicio" className="form-label">Fecha de inicio</label>
+            <div className="fila-formulario">
+              <div className="campo-formulario">
+                <label htmlFor="fecha_inicio" className="etiqueta-formulario">Fecha de inicio</label>
                 <input
                   id="fecha_inicio"
                   name="fecha_inicio"
                   type="date"
-                  className={'form-input' + (errores.fecha_inicio ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.fecha_inicio ? ' entrada-formulario--error' : '')}
                   value={form.fecha_inicio}
                   onChange={handleChange}
                 />
-                {errores.fecha_inicio && <p className="form-field-error">{errores.fecha_inicio[0]}</p>}
+                {errores.fecha_inicio && <p className="error-campo-formulario">{errores.fecha_inicio[0]}</p>}
               </div>
 
-              <div className="form-field">
-                <label htmlFor="fecha_fin" className="form-label">Fecha de fin</label>
+              <div className="campo-formulario">
+                <label htmlFor="fecha_fin" className="etiqueta-formulario">Fecha de fin</label>
                 <input
                   id="fecha_fin"
                   name="fecha_fin"
                   type="date"
-                  className={'form-input' + (errores.fecha_fin ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.fecha_fin ? ' entrada-formulario--error' : '')}
                   value={form.fecha_fin}
                   onChange={handleChange}
                   min={form.fecha_inicio || undefined}
                 />
-                {errores.fecha_fin && <p className="form-field-error">{errores.fecha_fin[0]}</p>}
+                {errores.fecha_fin && <p className="error-campo-formulario">{errores.fecha_fin[0]}</p>}
               </div>
             </div>
           </fieldset>
 
           {/* ── Acciones ───────────────────────────────── */}
-          <div className="form-actions">
+          <div className="acciones-formulario">
             <Link to={`/torneos/${id}`} className="btn-cancelar">
               Cancelar
             </Link>
-            <button type="submit" className="btn-submit" disabled={enviando}>
+            <button type="submit" className="btn-enviar" disabled={enviando}>
               {enviando ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>

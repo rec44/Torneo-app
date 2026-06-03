@@ -3,52 +3,58 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TorneoResource;
+use App\Http\Resources\UsuarioPerfilResource;
+use App\Http\Resources\UsuarioResource;
+use App\Models\Partido;
+use App\Models\Torneo;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class UsuarioController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Usuario::select('id', 'nombre', 'email', 'elo', 'rol', 'created_at')->paginate(20));
+        $usuarios = Usuario::select('id', 'nombre', 'email', 'elo', 'rol', 'created_at')->paginate(20);
+
+        return UsuarioResource::collection($usuarios)->response();
     }
 
-    public function show(Usuario $usuario): JsonResponse
+    public function show(Usuario $usuario): JsonResponse|JsonResource
     {
         $usuario->load('elosDeporte.deporte');
 
-        $relacionTorneos = fn($q) => $q
+        $relacionTorneos = fn ($q) => $q
             ->with(['deporte', 'creadoPor:id,nombre'])
-            ->withCount(['equipos as equipos_count' => fn($q) => $q->where('bloqueado', true)]);
+            ->withCount(['equipos as equipos_count' => fn ($q) => $q->where('bloqueado', true)]);
 
-        $torneosCreados = \App\Models\Torneo::where('creado_por', $usuario->id)
+        $torneosCreados = Torneo::where('creado_por', $usuario->id)
             ->tap($relacionTorneos)
             ->get();
 
-        $torneosInscritos = \App\Models\Torneo::whereHas('equipos', fn($q) =>
-            $q->whereHas('miembros', fn($q2) => $q2->where('usuarios.id', $usuario->id))
+        $torneosInscritos = Torneo::whereHas('equipos', fn ($q) =>
+            $q->whereHas('miembros', fn ($q2) => $q2->where('usuarios.id', $usuario->id))
         )->tap($relacionTorneos)->get();
 
-        $torneosGanados = \App\Models\Partido::where('estado', 'finalizado')
+        $torneosGanados = Partido::where('estado', 'finalizado')
             ->whereNotNull('ganador_equipo_id')
-            ->whereHas('ganadorEquipo', fn($q) => $q->where('capitan_id', $usuario->id))
-            ->whereHas('torneo', fn($q) => $q->where('estado', 'finalizado'))
+            ->whereHas('ganadorEquipo', fn ($q) => $q->where('capitan_id', $usuario->id))
+            ->whereHas('torneo', fn ($q) => $q->where('estado', 'finalizado'))
             ->select('torneo_id')
             ->distinct()
             ->count();
 
-        $data = $usuario->toArray();
-        $data['elosDeporte']      = $data['elos_deporte'] ?? [];
-        $data['torneos_creados']  = $torneosCreados;
-        $data['torneos_inscritos'] = $torneosInscritos;
-        $data['torneos_ganados']  = $torneosGanados;
-        unset($data['elos_deporte']);
-
-        return response()->json($data);
+        return new UsuarioPerfilResource($usuario, [
+            'elosDeporte'       => \App\Http\Resources\EloDeporteResource::collection($usuario->getRelation('elosDeporte')),
+            'torneos_creados'   => TorneoResource::collection($torneosCreados),
+            'torneos_inscritos' => TorneoResource::collection($torneosInscritos),
+            'torneos_ganados'   => $torneosGanados,
+        ]);
     }
 
-    public function update(Request $request, Usuario $usuario): JsonResponse
+    public function update(Request $request, Usuario $usuario): JsonResponse|JsonResource
     {
         if ($request->user()->id !== $usuario->id && $request->user()->rol !== 'admin') {
             return response()->json(['message' => 'No autorizado.'], 403);
@@ -66,7 +72,7 @@ class UsuarioController extends Controller
 
         $usuario->update($data);
 
-        return response()->json($usuario->fresh());
+        return new UsuarioResource($usuario->fresh());
     }
 
     public function destroy(Request $request, Usuario $usuario): JsonResponse
@@ -99,6 +105,9 @@ class UsuarioController extends Controller
 
         $usuario->restore();
 
-        return response()->json(['message' => 'Usuario desbaneado correctamente.', 'usuario' => $usuario]);
+        return response()->json([
+            'message' => 'Usuario desbaneado correctamente.',
+            'usuario' => new UsuarioResource($usuario),
+        ]);
     }
 }

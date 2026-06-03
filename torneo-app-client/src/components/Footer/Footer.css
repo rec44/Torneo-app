@@ -1,4 +1,4 @@
-.footer {
+﻿.pie {
   background: #111009;
   color: #a09890;
   border-top: 3px solid #f97316;
@@ -7,7 +7,7 @@
 
 /* ─── Inner row ─────────────────────────────────────────────── */
 
-.footer-inner {
+.pie-interior {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,13 +23,13 @@
 
 /* ─── Brand ─────────────────────────────────────────────────── */
 
-.footer-brand-col {
+.pie-columna-marca {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.footer-brand {
+.pie-marca {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -42,7 +42,7 @@
   svg { color: #f97316; }
 }
 
-.footer-tagline {
+.pie-eslogan {
   font-size: 12px;
   color: #4a4640;
   margin: 0;
@@ -52,7 +52,7 @@
 
 /* ─── Nav links ─────────────────────────────────────────────── */
 
-.footer-links-row {
+.pie-fila-enlaces {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
@@ -60,7 +60,7 @@
   @media (max-width: 480px) { display: none; }
 }
 
-.footer-link {
+.pie-enlace {
   padding: 5px 12px;
   font-size: 13px;
   color: #706a60;
@@ -76,12 +76,12 @@
 
 /* ─── Social ─────────────────────────────────────────────────── */
 
-.footer-social {
+.pie-social {
   display: flex;
   gap: 8px;
 }
 
-.footer-social-btn {
+.pie-btn-social {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +103,7 @@
 
 /* ─── Bottom bar ─────────────────────────────────────────────── */
 
-.footer-bottom {
+.pie-inferior {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -120,7 +120,7 @@
   }
 }
 
-.footer-email {
+.pie-email {
   font-size: 12px;
   color: #3d3a30;
 }

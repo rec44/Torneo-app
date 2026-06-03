@@ -1,4 +1,4 @@
-.unirse-page {
+﻿.unirse-page {
   min-height: calc(100vh - 72px);
   padding: 64px 16px 32px;
   box-sizing: border-box;
@@ -73,7 +73,7 @@
   line-height: 1.25;
 }
 
-.unirse-desc {
+.unirse-descripcion {
   font-size: 15px;
   color: var(--text);
   margin: 0 0 24px;
@@ -82,7 +82,7 @@
 
 /* ─── Caja del equipo ────────────────────────────── */
 
-.unirse-equipo-box {
+.unirse-equipo-caja {
   background: var(--bg-alt, rgba(0,0,0,0.03));
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -95,7 +95,7 @@
   }
 }
 
-.unirse-equipo-label {
+.unirse-equipo-etiqueta {
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
@@ -118,7 +118,7 @@
 
 /* ─── Botón principal ────────────────────────────── */
 
-.unirse-btn {
+.unirse-boton {
   width: 100%;
   justify-content: center;
   box-sizing: border-box;
@@ -133,7 +133,7 @@
   gap: 0;
 }
 
-.unirse-auth-hint {
+.unirse-auth-pista {
   font-size: 14px;
   color: var(--text);
   margin: 0 0 16px;

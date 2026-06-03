@@ -5,33 +5,35 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeporteRequest;
 use App\Http\Requests\UpdateDeporteRequest;
+use App\Http\Resources\DeporteResource;
 use App\Models\Deporte;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class DeporteController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(Deporte::all());
+        return response()->json(DeporteResource::collection(Deporte::all()));
     }
 
     public function store(StoreDeporteRequest $request): JsonResponse
     {
         $deporte = Deporte::create($request->validated());
 
-        return response()->json($deporte, 201);
+        return (new DeporteResource($deporte))->response()->setStatusCode(201);
     }
 
-    public function show(Deporte $deporte): JsonResponse
+    public function show(Deporte $deporte): JsonResponse|JsonResource
     {
-        return response()->json($deporte);
+        return new DeporteResource($deporte);
     }
 
-    public function update(UpdateDeporteRequest $request, Deporte $deporte): JsonResponse
+    public function update(UpdateDeporteRequest $request, Deporte $deporte): JsonResponse|JsonResource
     {
         $deporte->update($request->validated());
 
-        return response()->json($deporte);
+        return new DeporteResource($deporte);
     }
 
     public function destroy(Deporte $deporte): JsonResponse
@@ -41,11 +43,11 @@ class DeporteController extends Controller
         return response()->json(null, 204);
     }
 
-    public function restaurar(int $id): JsonResponse
+    public function restaurar(int $id): JsonResponse|JsonResource
     {
         $deporte = Deporte::withTrashed()->findOrFail($id);
         $deporte->restore();
 
-        return response()->json($deporte);
+        return new DeporteResource($deporte);
     }
 }

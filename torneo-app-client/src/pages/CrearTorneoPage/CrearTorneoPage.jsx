@@ -1,8 +1,8 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useDeportes } from '../hooks/useDeportes'
-import { torneoService } from '../services/torneoService'
-import { PROVINCIAS, MUNICIPIOS } from '../data/municipios'
+import { useDeportes } from '../../hooks/useDeportes'
+import { torneoService } from '../../services/torneoService'
+import { PROVINCIAS, MUNICIPIOS } from '../../data/municipios'
 import './CrearTorneoPage.css'
 
 const TAMANIOS_BRACKET = [2, 4, 8, 16, 32]
@@ -108,45 +108,45 @@ export function CrearTorneoPage() {
         </div>
 
         {errorGeneral && (
-          <div className="form-error-general">{errorGeneral}</div>
+          <div className="error-general-formulario">{errorGeneral}</div>
         )}
 
-        <form className="crear-torneo-form" onSubmit={handleSubmit} noValidate>
+        <form className="crear-torneo-formulario" onSubmit={handleSubmit} noValidate>
 
           {/* ── Información básica ─────────────────────── */}
-          <div className="form-section">
-            <div className="form-section-header">
-              <span className="form-section-num">01</span>
-              <span className="form-section-title">Información básica</span>
+          <div className="seccion-formulario">
+            <div className="seccion-formulario-cabecera">
+              <span className="seccion-formulario-numero">01</span>
+              <span className="seccion-formulario-titulo">Información básica</span>
             </div>
-            <div className="form-section-body">
+            <div className="seccion-formulario-cuerpo">
 
-              <div className="form-field">
-                <label htmlFor="nombre" className="form-label">
-                  Nombre del torneo <span className="form-required">*</span>
+              <div className="campo-formulario">
+                <label htmlFor="nombre" className="etiqueta-formulario">
+                  Nombre del torneo <span className="requerido">*</span>
                 </label>
                 <input
                   id="nombre"
                   name="nombre"
                   type="text"
-                  className={'form-input' + (errores.nombre ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.nombre ? ' entrada-formulario--error' : '')}
                   value={form.nombre}
                   onChange={handleChange}
                   placeholder="Ej: Copa Primavera 2025"
                   maxLength={255}
                   required
                 />
-                {errores.nombre && <p className="form-field-error">{errores.nombre[0]}</p>}
+                {errores.nombre && <p className="error-campo-formulario">{errores.nombre[0]}</p>}
               </div>
 
-              <div className="form-field">
-                <label htmlFor="deporte_id" className="form-label">
-                  Deporte <span className="form-required">*</span>
+              <div className="campo-formulario">
+                <label htmlFor="deporte_id" className="etiqueta-formulario">
+                  Deporte <span className="requerido">*</span>
                 </label>
                 <select
                   id="deporte_id"
                   name="deporte_id"
-                  className={'form-select' + (errores.deporte_id ? ' form-input--error' : '')}
+                  className={'selector-formulario' + (errores.deporte_id ? ' entrada-formulario--error' : '')}
                   value={form.deporte_id}
                   onChange={handleChange}
                   required
@@ -157,28 +157,28 @@ export function CrearTorneoPage() {
                     <option key={d.id} value={d.id}>{d.nombre}</option>
                   ))}
                 </select>
-                {errores.deporte_id && <p className="form-field-error">{errores.deporte_id[0]}</p>}
+                {errores.deporte_id && <p className="error-campo-formulario">{errores.deporte_id[0]}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Configuración ──────────────────────────── */}
-          <div className="form-section">
-            <div className="form-section-header">
-              <span className="form-section-num">02</span>
-              <span className="form-section-title">Configuración</span>
+          <div className="seccion-formulario">
+            <div className="seccion-formulario-cabecera">
+              <span className="seccion-formulario-numero">02</span>
+              <span className="seccion-formulario-titulo">Configuración</span>
             </div>
-            <div className="form-section-body">
+            <div className="seccion-formulario-cuerpo">
 
-              <div className="form-field">
-                <label htmlFor="max_jugadores" className="form-label">
-                  Número de equipos <span className="form-required">*</span>
+              <div className="campo-formulario">
+                <label htmlFor="max_jugadores" className="etiqueta-formulario">
+                  Número de equipos <span className="requerido">*</span>
                 </label>
                 <select
                   id="max_jugadores"
                   name="max_jugadores"
-                  className={'form-select' + (errores.max_jugadores ? ' form-input--error' : '')}
+                  className={'selector-formulario' + (errores.max_jugadores ? ' entrada-formulario--error' : '')}
                   value={form.max_jugadores}
                   onChange={handleChange}
                   required
@@ -188,80 +188,80 @@ export function CrearTorneoPage() {
                     <option key={n} value={n}>{n} equipos</option>
                   ))}
                 </select>
-                {errores.max_jugadores && <p className="form-field-error">{errores.max_jugadores[0]}</p>}
+                {errores.max_jugadores && <p className="error-campo-formulario">{errores.max_jugadores[0]}</p>}
               </div>
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="min_miembros" className="form-label">
+              <div className="fila-formulario">
+                <div className="campo-formulario">
+                  <label htmlFor="min_miembros" className="etiqueta-formulario">
                     Mín. miembros por equipo
                   </label>
                   <input
                     id="min_miembros"
                     name="min_miembros"
                     type="number"
-                    className={'form-input' + (errores.min_miembros ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.min_miembros ? ' entrada-formulario--error' : '')}
                     value={form.min_miembros}
                     onChange={handleChange}
                     min={1}
                     placeholder="1"
                   />
-                  {errores.min_miembros && <p className="form-field-error">{errores.min_miembros[0]}</p>}
+                  {errores.min_miembros && <p className="error-campo-formulario">{errores.min_miembros[0]}</p>}
                 </div>
 
-                <div className="form-field">
-                  <label htmlFor="max_miembros" className="form-label">
-                    Máx. miembros por equipo <span className="form-hint">(opcional)</span>
+                <div className="campo-formulario">
+                  <label htmlFor="max_miembros" className="etiqueta-formulario">
+                    Máx. miembros por equipo <span className="ayuda-formulario">(opcional)</span>
                   </label>
                   <input
                     id="max_miembros"
                     name="max_miembros"
                     type="number"
-                    className={'form-input' + (errores.max_miembros ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.max_miembros ? ' entrada-formulario--error' : '')}
                     value={form.max_miembros}
                     onChange={handleChange}
                     min={form.min_miembros || 1}
                     placeholder="Sin límite"
                   />
-                  {errores.max_miembros && <p className="form-field-error">{errores.max_miembros[0]}</p>}
+                  {errores.max_miembros && <p className="error-campo-formulario">{errores.max_miembros[0]}</p>}
                 </div>
               </div>
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="elo_minimo" className="form-label">
-                    ELO mínimo <span className="form-required">*</span>
+              <div className="fila-formulario">
+                <div className="campo-formulario">
+                  <label htmlFor="elo_minimo" className="etiqueta-formulario">
+                    ELO mínimo <span className="requerido">*</span>
                   </label>
                   <input
                     id="elo_minimo"
                     name="elo_minimo"
                     type="number"
-                    className={'form-input' + (errores.elo_minimo ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.elo_minimo ? ' entrada-formulario--error' : '')}
                     value={form.elo_minimo}
                     onChange={handleChange}
                     min={0}
                     placeholder="Ej: 400"
                     required
                   />
-                  {errores.elo_minimo && <p className="form-field-error">{errores.elo_minimo[0]}</p>}
+                  {errores.elo_minimo && <p className="error-campo-formulario">{errores.elo_minimo[0]}</p>}
                 </div>
 
-                <div className="form-field">
-                  <label htmlFor="elo_maximo" className="form-label">
-                    ELO máximo <span className="form-required">*</span>
+                <div className="campo-formulario">
+                  <label htmlFor="elo_maximo" className="etiqueta-formulario">
+                    ELO máximo <span className="requerido">*</span>
                   </label>
                   <input
                     id="elo_maximo"
                     name="elo_maximo"
                     type="number"
-                    className={'form-input' + (errores.elo_maximo ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.elo_maximo ? ' entrada-formulario--error' : '')}
                     value={form.elo_maximo}
                     onChange={handleChange}
                     min={0}
                     placeholder="Ej: 1200"
                     required
                   />
-                  {errores.elo_maximo && <p className="form-field-error">{errores.elo_maximo[0]}</p>}
+                  {errores.elo_maximo && <p className="error-campo-formulario">{errores.elo_maximo[0]}</p>}
                 </div>
               </div>
 
@@ -269,40 +269,40 @@ export function CrearTorneoPage() {
           </div>
 
           {/* ── Localización ───────────────────────────── */}
-          <div className="form-section">
-            <div className="form-section-header">
-              <span className="form-section-num">03</span>
-              <span className="form-section-title">Localización</span>
+          <div className="seccion-formulario">
+            <div className="seccion-formulario-cabecera">
+              <span className="seccion-formulario-numero">03</span>
+              <span className="seccion-formulario-titulo">Localización</span>
             </div>
-            <div className="form-section-body">
+            <div className="seccion-formulario-cuerpo">
 
-              <div className="form-field">
-                <label htmlFor="direccion" className="form-label">
-                  Dirección <span className="form-required">*</span>
+              <div className="campo-formulario">
+                <label htmlFor="direccion" className="etiqueta-formulario">
+                  Dirección <span className="requerido">*</span>
                 </label>
                 <input
                   id="direccion"
                   name="direccion"
                   type="text"
-                  className={'form-input' + (errores.direccion ? ' form-input--error' : '')}
+                  className={'entrada-formulario' + (errores.direccion ? ' entrada-formulario--error' : '')}
                   value={form.direccion}
                   onChange={handleChange}
                   placeholder="Ej: Calle Mayor 12, pabellón B"
                   maxLength={255}
                   required
                 />
-                {errores.direccion && <p className="form-field-error">{errores.direccion[0]}</p>}
+                {errores.direccion && <p className="error-campo-formulario">{errores.direccion[0]}</p>}
               </div>
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="provincia" className="form-label">
-                    Provincia <span className="form-required">*</span>
+              <div className="fila-formulario">
+                <div className="campo-formulario">
+                  <label htmlFor="provincia" className="etiqueta-formulario">
+                    Provincia <span className="requerido">*</span>
                   </label>
                   <select
                     id="provincia"
                     name="provincia"
-                    className={'form-select' + (errores.provincia ? ' form-input--error' : '')}
+                    className={'selector-formulario' + (errores.provincia ? ' entrada-formulario--error' : '')}
                     value={form.provincia}
                     onChange={handleChange}
                     required
@@ -312,17 +312,17 @@ export function CrearTorneoPage() {
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
-                  {errores.provincia && <p className="form-field-error">{errores.provincia[0]}</p>}
+                  {errores.provincia && <p className="error-campo-formulario">{errores.provincia[0]}</p>}
                 </div>
 
-                <div className="form-field">
-                  <label htmlFor="ciudad" className="form-label">
-                    Ciudad <span className="form-required">*</span>
+                <div className="campo-formulario">
+                  <label htmlFor="ciudad" className="etiqueta-formulario">
+                    Ciudad <span className="requerido">*</span>
                   </label>
                   <select
                     id="ciudad"
                     name="ciudad"
-                    className={'form-select' + (errores.ciudad ? ' form-input--error' : '')}
+                    className={'selector-formulario' + (errores.ciudad ? ' entrada-formulario--error' : '')}
                     value={form.ciudad}
                     onChange={handleChange}
                     disabled={!form.provincia}
@@ -335,7 +335,7 @@ export function CrearTorneoPage() {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-                  {errores.ciudad && <p className="form-field-error">{errores.ciudad[0]}</p>}
+                  {errores.ciudad && <p className="error-campo-formulario">{errores.ciudad[0]}</p>}
                 </div>
               </div>
 
@@ -343,40 +343,40 @@ export function CrearTorneoPage() {
           </div>
 
           {/* ── Fechas ─────────────────────────────────── */}
-          <div className="form-section">
-            <div className="form-section-header">
-              <span className="form-section-num">04</span>
-              <span className="form-section-title">Fechas <span className="form-hint">(opcionales)</span></span>
+          <div className="seccion-formulario">
+            <div className="seccion-formulario-cabecera">
+              <span className="seccion-formulario-numero">04</span>
+              <span className="seccion-formulario-titulo">Fechas <span className="ayuda-formulario">(opcionales)</span></span>
             </div>
-            <div className="form-section-body">
+            <div className="seccion-formulario-cuerpo">
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="fecha_inicio" className="form-label">Fecha de inicio</label>
+              <div className="fila-formulario">
+                <div className="campo-formulario">
+                  <label htmlFor="fecha_inicio" className="etiqueta-formulario">Fecha de inicio</label>
                   <input
                     id="fecha_inicio"
                     name="fecha_inicio"
                     type="date"
-                    className={'form-input' + (errores.fecha_inicio ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.fecha_inicio ? ' entrada-formulario--error' : '')}
                     value={form.fecha_inicio}
                     onChange={handleChange}
                     max={form.fecha_fin || undefined}
                   />
-                  {errores.fecha_inicio && <p className="form-field-error">{errores.fecha_inicio[0]}</p>}
+                  {errores.fecha_inicio && <p className="error-campo-formulario">{errores.fecha_inicio[0]}</p>}
                 </div>
 
-                <div className="form-field">
-                  <label htmlFor="fecha_fin" className="form-label">Fecha de fin</label>
+                <div className="campo-formulario">
+                  <label htmlFor="fecha_fin" className="etiqueta-formulario">Fecha de fin</label>
                   <input
                     id="fecha_fin"
                     name="fecha_fin"
                     type="date"
-                    className={'form-input' + (errores.fecha_fin ? ' form-input--error' : '')}
+                    className={'entrada-formulario' + (errores.fecha_fin ? ' entrada-formulario--error' : '')}
                     value={form.fecha_fin}
                     onChange={handleChange}
                     min={form.fecha_inicio || undefined}
                   />
-                  {errores.fecha_fin && <p className="form-field-error">{errores.fecha_fin[0]}</p>}
+                  {errores.fecha_fin && <p className="error-campo-formulario">{errores.fecha_fin[0]}</p>}
                 </div>
               </div>
 
@@ -384,9 +384,9 @@ export function CrearTorneoPage() {
           </div>
 
           {/* ── Acciones ───────────────────────────────── */}
-          <div className="form-actions">
+          <div className="acciones-formulario">
             <Link to="/torneos" className="btn-cancelar">Cancelar</Link>
-            <button type="submit" className="btn-submit" disabled={enviando}>
+            <button type="submit" className="btn-enviar" disabled={enviando}>
               {enviando ? 'Creando...' : 'Crear torneo'}
             </button>
           </div>

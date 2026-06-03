@@ -1,4 +1,4 @@
-.auth-page {
+﻿.pag-auth {
   flex: 1;
   display: flex;
   align-items: center;
@@ -6,7 +6,7 @@
   padding: 40px 16px;
 }
 
-.auth-card {
+.tarjeta-auth {
   width: 100%;
   max-width: 420px;
   border: 1px solid var(--border);
@@ -20,7 +20,7 @@
   }
 }
 
-.auth-card-header {
+.tarjeta-auth-cabecera {
   margin-bottom: 28px;
 
   h2 {
@@ -29,7 +29,7 @@
   }
 }
 
-.auth-card-subtitulo {
+.tarjeta-auth-subtitulo {
   font-size: 14px;
   color: var(--text);
   margin: 0;
@@ -37,25 +37,25 @@
 
 /* ─── Form ─────────────────────────────────────────────────── */
 
-.auth-form {
+.formulario-auth {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.auth-field {
+.campo-auth {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.auth-label {
+.etiqueta-auth {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-h);
 }
 
-.auth-input {
+.entrada-auth {
   padding: 10px 12px;
   font-size: 15px;
   font-family: var(--sans);
@@ -79,7 +79,7 @@
   }
 }
 
-.auth-input--error {
+.entrada-auth--error {
   border-color: #dc2626;
 
   &:focus {
@@ -91,7 +91,7 @@
   }
 }
 
-.auth-field-error {
+.campo-auth-error {
   font-size: 13px;
   color: #dc2626;
   margin: 0;
@@ -103,7 +103,7 @@
 
 /* ─── Error general ────────────────────────────────────────── */
 
-.auth-error-general {
+.error-general-auth {
   padding: 10px 14px;
   background: rgba(239, 68, 68, 0.08);
   color: #dc2626;
@@ -119,7 +119,7 @@
 
 /* ─── Submit button ────────────────────────────────────────── */
 
-.auth-btn-submit {
+.btn-auth-enviar {
   width: 100%;
   padding: 11px;
   font-size: 15px;
@@ -149,9 +149,9 @@
   }
 }
 
-/* ─── Footer link ──────────────────────────────────────────── */
+/* ─── pie link ──────────────────────────────────────────── */
 
-.auth-footer {
+.auth-pie {
   margin-top: 20px;
   text-align: center;
   font-size: 14px;

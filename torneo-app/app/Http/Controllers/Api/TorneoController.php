@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\IniciarTorneoRequest;
 use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
+use App\Http\Resources\TorneoResource;
 use App\Mail\CalendarioConfirmado;
 // use App\Mail\TorneoIniciado;
 // use App\Mail\TorneoFinalizado;
@@ -14,6 +15,7 @@ use App\Models\Torneo;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -22,21 +24,21 @@ class TorneoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $torneos = Torneo::with('deporte', 'creadoPor:id,nombre')
-            ->withCount(['equipos as equipos_count' => fn($q) => $q->where('bloqueado', true)])
+            ->withCount(['equipos as equipos_count' => fn ($q) => $q->where('bloqueado', true)])
             ->when(
                 $request->filled('estado'),
-                fn($q) => $q->where('estado', $request->estado),
-                fn($q) => $q->where('estado', '!=', 'finalizado')
+                fn ($q) => $q->where('estado', $request->estado),
+                fn ($q) => $q->where('estado', '!=', 'finalizado')
             )
-            ->when($request->deporte_id,   fn($q, $v) => $q->where('deporte_id', $v))
-            ->when($request->fecha_desde,  fn($q, $v) => $q->whereDate('fecha_inicio', '>=', $v))
-            ->when($request->fecha_hasta,  fn($q, $v) => $q->whereDate('fecha_inicio', '<=', $v))
-            ->when($request->elo_min,      fn($q, $v) => $q->where('elo_minimo', '>=', $v))
-            ->when($request->elo_max,      fn($q, $v) => $q->where('elo_maximo', '<=', $v))
+            ->when($request->deporte_id,  fn ($q, $v) => $q->where('deporte_id', $v))
+            ->when($request->fecha_desde, fn ($q, $v) => $q->whereDate('fecha_inicio', '>=', $v))
+            ->when($request->fecha_hasta, fn ($q, $v) => $q->whereDate('fecha_inicio', '<=', $v))
+            ->when($request->elo_min,     fn ($q, $v) => $q->where('elo_minimo', '>=', $v))
+            ->when($request->elo_max,     fn ($q, $v) => $q->where('elo_maximo', '<=', $v))
             ->orderBy('fecha_inicio', 'asc')
             ->paginate(9);
 
-        return response()->json($torneos);
+        return TorneoResource::collection($torneos)->response();
     }
 
     public function store(StoreTorneoRequest $request): JsonResponse
@@ -46,26 +48,26 @@ class TorneoController extends Controller
 
         $torneo = Torneo::create($data);
 
-        return response()->json($torneo->load('deporte'), 201);
+        return (new TorneoResource($torneo->load('deporte')))->response()->setStatusCode(201);
     }
 
-    public function show(Torneo $torneo): JsonResponse
+    public function show(Torneo $torneo): JsonResponse|JsonResource
     {
         $torneo->load([
             'deporte',
             'creadoPor:id,nombre',
             'equipos.capitan:id,nombre',
             'equipos.miembros:id,nombre,elo',
-            'partidos.equipo1:id,nombre',
-            'partidos.equipo2:id,nombre',
-            'partidos.ganadorEquipo:id,nombre',
+            'partidos.equipo1:id,nombre,escudo',
+            'partidos.equipo2:id,nombre,escudo',
+            'partidos.ganadorEquipo:id,nombre,escudo',
             'partidos.historialElo:id,partido_id,usuario_id,elo_antes,elo_despues,delta',
         ]);
 
-        return response()->json($torneo);
+        return new TorneoResource($torneo);
     }
 
-    public function update(UpdateTorneoRequest $request, Torneo $torneo): JsonResponse
+    public function update(UpdateTorneoRequest $request, Torneo $torneo): JsonResponse|JsonResource
     {
         $this->authorize('update', $torneo);
 
@@ -75,7 +77,7 @@ class TorneoController extends Controller
 
         $torneo->update($request->validated());
 
-        return response()->json($torneo->fresh());
+        return new TorneoResource($torneo->fresh());
     }
 
     public function destroy(Request $request, Torneo $torneo): JsonResponse
@@ -96,18 +98,18 @@ class TorneoController extends Controller
         $usuario = $request->user();
 
         $creados = Torneo::with('deporte', 'creadoPor:id,nombre')
-            ->withCount(['equipos as equipos_count' => fn($q) => $q->where('bloqueado', true)])
+            ->withCount(['equipos as equipos_count' => fn ($q) => $q->where('bloqueado', true)])
             ->where('creado_por', $usuario->id)
             ->get();
 
         $inscrito = Torneo::with('deporte', 'creadoPor:id,nombre')
-            ->withCount(['equipos as equipos_count' => fn($q) => $q->where('bloqueado', true)])
-            ->whereHas('equipos.miembros', fn($q) => $q->where('usuarios.id', $usuario->id))
+            ->withCount(['equipos as equipos_count' => fn ($q) => $q->where('bloqueado', true)])
+            ->whereHas('equipos.miembros', fn ($q) => $q->where('usuarios.id', $usuario->id))
             ->get();
 
         return response()->json([
-            'creados'  => $creados,
-            'inscrito' => $inscrito,
+            'creados'  => TorneoResource::collection($creados),
+            'inscrito' => TorneoResource::collection($inscrito),
         ]);
     }
 
@@ -120,8 +122,8 @@ class TorneoController extends Controller
         }
 
         $todosEquipos  = $torneo->equipos()->get();
-        $confirmados   = $todosEquipos->filter(fn($e) => $e->bloqueado);
-        $noConfirmados = $todosEquipos->filter(fn($e) => ! $e->bloqueado);
+        $confirmados   = $todosEquipos->filter(fn ($e) => $e->bloqueado);
+        $noConfirmados = $todosEquipos->filter(fn ($e) => ! $e->bloqueado);
 
         $minEquipos = (int) floor($torneo->max_jugadores / 2) + 1;
 
@@ -145,7 +147,7 @@ class TorneoController extends Controller
             $this->generarBracketEliminacionSimple($torneo, $confirmados->values());
         }
 
-        // Mail::to(...)->queue(new TorneoIniciado(...)); // pendiente de activar
+        // Mail::to(...)->queue(new TorneoIniciado(...)); // TODO: activar cuando tengamos el template
 
         $mensaje = 'Bracket generado. Asigna fechas a los partidos en la pestaña Calendario y confirma el inicio.';
         if ($noConfirmados->isNotEmpty()) {
@@ -155,7 +157,9 @@ class TorneoController extends Controller
 
         return response()->json([
             'message' => $mensaje,
-            'torneo'  => $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo'),
+            'torneo'  => new TorneoResource(
+                $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo')
+            ),
         ]);
     }
 
@@ -190,7 +194,9 @@ class TorneoController extends Controller
 
         return response()->json([
             'message' => 'Torneo en curso.',
-            'torneo'  => $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo'),
+            'torneo'  => new TorneoResource(
+                $torneo->fresh()->load('equipos', 'partidos.equipo1', 'partidos.equipo2', 'partidos.ganadorEquipo')
+            ),
         ]);
     }
 
@@ -199,21 +205,18 @@ class TorneoController extends Controller
         $n = $equipos->count();
         if ($n < 2) return;
 
-        // Siguiente potencia de 2 >= N (para calcular slots con posibles byes)
         $slots = 1;
         while ($slots < $n) $slots *= 2;
         $rounds = (int) log($slots, 2);
 
         $order = $this->bracketOrder($slots);
 
-        // Ronda 1: emparejar según semillas en orden de bracket
         for ($i = 0; $i < $slots / 2; $i++) {
             $seed1 = $order[$i * 2];
             $seed2 = $order[$i * 2 + 1];
             $eq1   = $seed1 <= $n ? $equipos->firstWhere('semilla', $seed1) : null;
             $eq2   = $seed2 <= $n ? $equipos->firstWhere('semilla', $seed2) : null;
 
-            // Bye: si solo hay un equipo en el enfrentamiento, avanza automáticamente
             $esBye   = ($eq1 && !$eq2) || (!$eq1 && $eq2);
             $ganador = $esBye ? ($eq1 ?? $eq2) : null;
 
@@ -228,7 +231,6 @@ class TorneoController extends Controller
             ]);
         }
 
-        // Rondas siguientes: partidos vacíos (TBD), se rellenan conforme avancen equipos
         for ($round = 2; $round <= $rounds; $round++) {
             $count = $slots / (int) pow(2, $round);
             for ($i = 0; $i < $count; $i++) {
@@ -241,7 +243,6 @@ class TorneoController extends Controller
             }
         }
 
-        // Propagar byes: colocar al ganador en su partido de ronda 2
         $idsRonda1 = Partido::where('torneo_id', $torneo->id)
             ->where('ronda', 1)
             ->orderBy('id')
@@ -271,8 +272,6 @@ class TorneoController extends Controller
         }
     }
 
-    // Genera el orden estándar de bracket para N slots (N debe ser potencia de 2).
-    // Ej: N=8 → [1,8,5,4,3,6,7,2] → emparejamientos: 1v8, 5v4, 3v6, 7v2
     private function participantes(Torneo $torneo)
     {
         return DB::table('usuarios')

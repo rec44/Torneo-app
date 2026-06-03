@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { equipoService } from '../services/equipoService'
+import { useAuth } from '../../hooks/useAuth'
+import { equipoService } from '../../services/equipoService'
 import './UnirseInvitacionPage.css'
 
 export function UnirseInvitacionPage() {
@@ -57,8 +57,8 @@ export function UnirseInvitacionPage() {
             </svg>
           </div>
           <h2 className="unirse-titulo">Invitación inválida</h2>
-          <p className="unirse-desc">Este enlace ha expirado, ya fue usado o no existe.</p>
-          <Link to="/torneos" className="btn-primary">Ver torneos disponibles</Link>
+          <p className="unirse-descripcion">Este enlace ha expirado, ya fue usado o no existe.</p>
+          <Link to="/torneos" className="btn-primario">Ver torneos disponibles</Link>
         </div>
       </div>
     )
@@ -75,11 +75,11 @@ export function UnirseInvitacionPage() {
             </svg>
           </div>
           <h2 className="unirse-titulo">¡Ya eres parte del equipo!</h2>
-          <p className="unirse-desc">
+          <p className="unirse-descripcion">
             Ahora formas parte de <strong>{info.equipo.nombre}</strong> en el torneo{' '}
             <strong>{info.torneo.nombre}</strong>.
           </p>
-          <button className="btn-primary" onClick={() => navigate(`/torneos/${info.torneo.id}`)}>
+          <button className="btn-primario" onClick={() => navigate(`/torneos/${info.torneo.id}`)}>
             Ver el torneo
           </button>
         </div>
@@ -97,8 +97,8 @@ export function UnirseInvitacionPage() {
         )}
         <h2 className="unirse-titulo">{info.torneo.nombre}</h2>
 
-        <div className="unirse-equipo-box">
-          <div className="unirse-equipo-label">Te han invitado al equipo</div>
+        <div className="unirse-equipo-caja">
+          <div className="unirse-equipo-etiqueta">Te han invitado al equipo</div>
           <div className="unirse-equipo-nombre">{info.equipo.nombre}</div>
           <div className="unirse-equipo-meta">
             {info.equipo.miembros_count} miembro{info.equipo.miembros_count !== 1 ? 's' : ''} · Torneo {info.torneo.estado === 'abierto' ? 'abierto' : info.torneo.estado}
@@ -108,17 +108,17 @@ export function UnirseInvitacionPage() {
         {error && <p className="unirse-error">{error}</p>}
 
         {user ? (
-          <button className="btn-primary unirse-btn" onClick={handleUnirse} disabled={uniendo}>
+          <button className="btn-primario unirse-boton" onClick={handleUnirse} disabled={uniendo}>
             {uniendo ? 'Uniéndose…' : `Unirse a ${info.equipo.nombre}`}
           </button>
         ) : (
           <div className="unirse-auth">
-            <p className="unirse-auth-hint">Necesitas una cuenta para unirte a este equipo.</p>
+            <p className="unirse-auth-pista">Necesitas una cuenta para unirte a este equipo.</p>
             <div className="unirse-auth-acciones">
-              <Link to={`/login?redirect=${redirectParam}`} className="btn-primary">
+              <Link to={`/login?redirect=${redirectParam}`} className="btn-primario">
                 Iniciar sesión
               </Link>
-              <Link to={`/register?redirect=${redirectParam}`} className="btn-secondary">
+              <Link to={`/register?redirect=${redirectParam}`} className="btn-secundario">
                 Crear cuenta
               </Link>
             </div>

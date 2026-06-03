@@ -30,7 +30,7 @@ class EloService
         $partido->update(['delta_elo_e1' => $delta1, 'delta_elo_e2' => $delta2]);
     }
 
-    // Revierte el ELO de un partido ya finalizado usando el ganador anterior.
+    // deshace el ELO si se corrige el resultado de un partido ya cerrado
     public function revertirPorPartido(Partido $partido, int $ganadorAnteriorId): void
     {
         $clon = clone $partido;
@@ -40,7 +40,7 @@ class EloService
 
         if ($delta1 === null) return;
 
-        // Borrar snapshots anteriores antes de revertir
+        // borramos el historial viejo antes de recalcular, si no se acumula basura
         HistorialElo::where('partido_id', $partido->id)->delete();
 
         foreach ($miembros1 as $u) {
@@ -61,8 +61,7 @@ class EloService
         );
     }
 
-    // Calcula los deltas sin aplicarlos. Devuelve [delta1, delta2, miembros1, miembros2, deporteId]
-    // o [null, null, null, null, null] si los datos no están completos.
+    // devuelve los deltas sin aplicar nada, o 5 nulls si faltan equipos o miembros
     private function calcularDeltas(Partido $partido): array
     {
         $null = [null, null, null, null, null];
@@ -128,31 +127,28 @@ class EloService
         }
     }
 
-    // Devuelve [kGanador, kPerdedor].
-    // Cuanto más lejos llegues antes de perder, menos pierdes (y el ganador gana más en finales).
+    // [kGanador, kPerdedor] — cuanto más lejos llegas antes de caer, menos ELO pierdes
     private function kFactor(int $ronda, int $maxRonda, float $mediaElo): array
     {
         $distanciaFinal = $maxRonda - $ronda;
 
-        // kBase más alto en rondas avanzadas: ganar la final vale más
+        // la final vale más, lógico
         $kBase = match (true) {
-            $distanciaFinal === 0 => 40,   // Final
-            $distanciaFinal === 1 => 32,   // Semis
-            $distanciaFinal === 2 => 28,   // Cuartos
-            default               => 24,   // Rondas anteriores
+            $distanciaFinal === 0 => 40,   // final
+            $distanciaFinal === 1 => 32,   // semis
+            $distanciaFinal === 2 => 28,   // cuartos
+            default               => 24,   // rondas previas
         };
 
-        // El perdedor usa solo una fracción del K según lo lejos que llegó.
-        // Rondas tempranas (cuartos, previas) → penalización alta.
-        // Final → penalización mínima (llegaste lejos).
+        // en rondas tempranas se penaliza más al perdedor; en la final casi nada
         $proteccionPerdedor = match (true) {
-            $distanciaFinal === 0 => 0.30,  // Final:   pierde solo el 30 %
-            $distanciaFinal === 1 => 0.50,  // Semis:   pierde el 50 %
-            $distanciaFinal === 2 => 0.75,  // Cuartos: pierde el 75 %
-            default               => 1.00,  // Rondas previas: sin protección
+            $distanciaFinal === 0 => 0.30,  // final:   solo pierde el 30%
+            $distanciaFinal === 1 => 0.50,  // semis:   50%
+            $distanciaFinal === 2 => 0.75,  // cuartos: 75%
+            default               => 1.00,  // el resto sin protección
         };
 
-        // Torneos de alto nivel dan hasta un 20 % más
+        // torneos de nivel alto compensan un poco (hasta +20%)
         $prestigio = 1 + min($mediaElo / 5000, 0.2);
 
         return [

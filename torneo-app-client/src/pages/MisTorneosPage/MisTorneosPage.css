@@ -1,4 +1,4 @@
-.mis-torneos-page {
+﻿.mis-torneos-page {
   padding: 40px 32px 64px;
   max-width: 1100px;
   margin: 0 auto;
@@ -29,7 +29,7 @@
   color: var(--text-h);
 }
 
-.mis-torneos-sub {
+.mis-torneos-subtitulo {
   margin: 0;
   font-size: 14px;
   color: var(--text);
@@ -37,14 +37,14 @@
 
 /* ─── Tabs ───────────────────────────────────────────────────── */
 
-.mis-tabs {
+.mis-pestanas {
   display: flex;
   gap: 2px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 36px;
 }
 
-.mis-tab {
+.mis-pestana {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -63,13 +63,13 @@
   &:hover { color: var(--text-h); }
 }
 
-.mis-tab--activo {
+.mis-pestana--activo {
   color: var(--accent);
   border-bottom-color: var(--accent);
   font-weight: 600;
 }
 
-.mis-tab-count {
+.mis-pestana-contador {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -83,7 +83,7 @@
   color: var(--text);
 }
 
-.mis-tab--activo .mis-tab-count {
+.mis-pestana--activo .mis-pestana-contador {
   background: var(--accent-bg);
   color: var(--accent);
 }
@@ -106,7 +106,7 @@
   letter-spacing: 0.04em;
 }
 
-.mis-count {
+.mis-contador {
   display: inline-flex;
   align-items: center;
   justify-content: center;

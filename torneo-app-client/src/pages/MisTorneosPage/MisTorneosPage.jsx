@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { torneoService } from '../services/torneoService'
-import { TorneoCard } from '../components/TorneoCard'
+import { torneoService } from '../../services/torneoService'
+import { TorneoCard } from '../../components/TorneoCard'
 import './MisTorneosPage.css'
 
 const esActivo = t => t.estado === 'abierto' || t.estado === 'en_curso'
@@ -46,7 +46,7 @@ export function MisTorneosPage() {
       <div className="mis-torneos-header">
         <div>
           <h1 className="mis-torneos-titulo">Mis torneos</h1>
-          <p className="mis-torneos-sub">Torneos abiertos y en curso en los que estás involucrado</p>
+          <p className="mis-torneos-subtitulo">Torneos abiertos y en curso en los que estás involucrado</p>
         </div>
         <Link to="/torneos/nuevo" className="btn-nuevo-torneo">+ Nuevo torneo</Link>
       </div>
@@ -56,11 +56,11 @@ export function MisTorneosPage() {
       {loading ? (
         <div className="torneos-grid">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="torneo-card torneo-card--skeleton">
-              <div className="skeleton-line skeleton-line--short" />
-              <div className="skeleton-line skeleton-line--title" />
-              <div className="skeleton-line" />
-              <div className="skeleton-line skeleton-line--short" />
+            <div key={i} className="tarjeta-torneo tarjeta-torneo--esqueleto">
+              <div className="linea-esqueleto linea-esqueleto--corta" />
+              <div className="linea-esqueleto linea-esqueleto--titulo" />
+              <div className="linea-esqueleto" />
+              <div className="linea-esqueleto linea-esqueleto--corta" />
             </div>
           ))}
         </div>

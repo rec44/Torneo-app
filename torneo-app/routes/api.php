@@ -8,48 +8,48 @@ use App\Http\Controllers\Api\TorneoController;
 use App\Http\Controllers\Api\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
-// Autenticación pública
+// auth pública
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 
-// Lectura pública
+// lectura sin token
 Route::apiResource('deportes', DeporteController::class)->only(['index', 'show']);
 Route::apiResource('torneos',  TorneoController::class)->only(['index', 'show']);
 Route::get('torneos/{torneo}/equipos',            [EquipoController::class, 'index']);
 Route::get('torneos/{torneo}/equipos/{equipo}',   [EquipoController::class, 'show']);
 Route::get('invitaciones/{codigo}',               [EquipoController::class, 'infoInvitacion']);
 
-// Rutas protegidas
+// todo lo demás requiere estar logueado
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
 
-    // Deportes (escritura — solo admin)
+    // solo admin puede crear/editar/borrar deportes
     Route::middleware('es_admin')->group(function () {
         Route::apiResource('deportes', DeporteController::class)->only(['store', 'update', 'destroy']);
         Route::post('deportes/{id}/restaurar', [DeporteController::class, 'restaurar']);
     });
 
-    // Usuarios — lectura y edición propia (autenticado)
+    // cualquier usuario puede ver y editar su propio perfil
     Route::get('usuarios/{usuario}',    [UsuarioController::class, 'show']);
     Route::put('usuarios/{usuario}',    [UsuarioController::class, 'update']);
     Route::patch('usuarios/{usuario}',  [UsuarioController::class, 'update']);
 
-    // Usuarios — gestión (solo admin)
+    // gestión de usuarios, solo admin
     Route::middleware('es_admin')->group(function () {
         Route::get('usuarios',                        [UsuarioController::class, 'index']);
         Route::delete('usuarios/{usuario}',           [UsuarioController::class, 'destroy']);
         Route::post('usuarios/{id}/desbanear',        [UsuarioController::class, 'desbanear']);
     });
 
-    // Torneos (escritura)
+    // crud torneos
     Route::get('mis-torneos', [TorneoController::class, 'misTorneos']);
     Route::apiResource('torneos', TorneoController::class)->only(['store', 'update', 'destroy']);
     Route::post('torneos/{torneo}/iniciar',   [TorneoController::class, 'iniciar']);
     Route::post('torneos/{torneo}/confirmar', [TorneoController::class, 'confirmar']);
 
-    // Equipos
+    // equipos
     Route::post('torneos/{torneo}/equipos',                              [EquipoController::class, 'store']);
     Route::patch('torneos/{torneo}/equipos/{equipo}',                    [EquipoController::class, 'update']);
     Route::delete('torneos/{torneo}/equipos/{equipo}',                   [EquipoController::class, 'destroy']);
@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('torneos/{torneo}/equipos/{equipo}/escudo',              [EquipoController::class, 'updateEscudo']);
     Route::post('equipos/unirse-codigo',                                 [EquipoController::class, 'unirsePorCodigo']);
 
-    // Partidos
+    // partidos
     Route::apiResource('partidos', PartidoController::class)->except(['store']);
     Route::patch('partidos/{partido}/resultado', [PartidoController::class, 'registrarResultado']);
 });

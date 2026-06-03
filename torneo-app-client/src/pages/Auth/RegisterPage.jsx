@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../../hooks/useAuth'
 import './AuthPage.css'
 
 export function RegisterPage() {
@@ -74,70 +74,70 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-card-header">
+    <div className="pag-auth">
+      <div className="tarjeta-auth">
+        <div className="tarjeta-auth-cabecera">
           <h2>Crear cuenta</h2>
         </div>
 
-        {errorGeneral && <div className="auth-error-general">{errorGeneral}</div>}
+        {errorGeneral && <div className="error-general-auth">{errorGeneral}</div>}
 
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <div className="auth-field">
-            <label htmlFor="nombre" className="auth-label">Nombre</label>
+        <form className="formulario-auth" onSubmit={handleSubmit} noValidate>
+          <div className="campo-auth">
+            <label htmlFor="nombre" className="etiqueta-auth">Nombre</label>
             <input
               id="nombre"
               name="nombre"
               type="text"
-              className={'auth-input' + (errores.nombre ? ' auth-input--error' : '')}
+              className={'entrada-auth' + (errores.nombre ? ' entrada-auth--error' : '')}
               value={form.nombre}
               onChange={handleChange}
               placeholder="Tu nombre"
               autoComplete="name"
               required
             />
-            {errores.nombre && <p className="auth-field-error">{errores.nombre[0]}</p>}
+            {errores.nombre && <p className="campo-auth-error">{errores.nombre[0]}</p>}
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="email" className="auth-label">Email</label>
+          <div className="campo-auth">
+            <label htmlFor="email" className="etiqueta-auth">Email</label>
             <input
               id="email"
               name="email"
               type="email"
-              className={'auth-input' + (errores.email ? ' auth-input--error' : '')}
+              className={'entrada-auth' + (errores.email ? ' entrada-auth--error' : '')}
               value={form.email}
               onChange={handleChange}
               placeholder="tu@email.com"
               autoComplete="email"
               required
             />
-            {errores.email && <p className="auth-field-error">{errores.email[0]}</p>}
+            {errores.email && <p className="campo-auth-error">{errores.email[0]}</p>}
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="contrasena" className="auth-label">Contraseña</label>
+          <div className="campo-auth">
+            <label htmlFor="contrasena" className="etiqueta-auth">Contraseña</label>
             <input
               id="contrasena"
               name="contrasena"
               type="password"
-              className={'auth-input' + (errores.contrasena ? ' auth-input--error' : '')}
+              className={'entrada-auth' + (errores.contrasena ? ' entrada-auth--error' : '')}
               value={form.contrasena}
               onChange={handleChange}
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
               required
             />
-            {errores.contrasena && <p className="auth-field-error">{errores.contrasena[0]}</p>}
+            {errores.contrasena && <p className="campo-auth-error">{errores.contrasena[0]}</p>}
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="contrasena_confirmation" className="auth-label">Confirmar contraseña</label>
+          <div className="campo-auth">
+            <label htmlFor="contrasena_confirmation" className="etiqueta-auth">Confirmar contraseña</label>
             <input
               id="contrasena_confirmation"
               name="contrasena_confirmation"
               type="password"
-              className="auth-input"
+              className="entrada-auth"
               value={form.contrasena_confirmation}
               onChange={handleChange}
               placeholder="Repite tu contraseña"
@@ -146,12 +146,12 @@ export function RegisterPage() {
             />
           </div>
 
-          <button type="submit" className="auth-btn-submit" disabled={cargando}>
+          <button type="submit" className="btn-auth-enviar" disabled={cargando}>
             {cargando ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p className="auth-pie">
           ¿Ya tienes cuenta?{' '}
           <Link to="/login">Inicia sesión</Link>
         </p>

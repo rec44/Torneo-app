@@ -21,8 +21,8 @@ class ResultadoRegistrado extends Mailable
 
     public function envelope(): Envelope
     {
-        $eq1 = $this->partido->equipo1?->nombre ?? 'TBD';
-        $eq2 = $this->partido->equipo2?->nombre ?? 'TBD';
+        $eq1 = $this->partido->equipo1?->nombre ?? 'Por definir';
+        $eq2 = $this->partido->equipo2?->nombre ?? 'Por definir';
 
         return new Envelope(
             subject: "Resultado: {$eq1} vs {$eq2} — {$this->partido->torneo->nombre}",

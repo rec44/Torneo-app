@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UsuarioResource;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -37,7 +39,7 @@ class AuthController extends Controller
         $token = $usuario->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'usuario' => $usuario,
+            'usuario' => new UsuarioResource($usuario),
             'token'   => $token,
         ], 201);
     }
@@ -68,7 +70,7 @@ class AuthController extends Controller
         $token = $usuario->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'usuario' => $usuario,
+            'usuario' => new UsuarioResource($usuario),
             'token'   => $token,
         ]);
     }
@@ -80,8 +82,8 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada correctamente.']);
     }
 
-    public function me(Request $request): JsonResponse
+    public function me(Request $request): JsonResponse|JsonResource
     {
-        return response()->json($request->user());
+        return new UsuarioResource($request->user());
     }
 }

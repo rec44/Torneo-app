@@ -14,10 +14,10 @@ export function usePartidos(filtrosIniciales = {}) {
       const data = await partidoService.getAll(params)
       setPartidos(data.data)
       setMeta({
-        total: data.total,
-        perPage: data.per_page,
-        pagina: data.current_page,
-        ultima: data.last_page,
+        total: data.meta.total,
+        perPage: data.meta.per_page,
+        pagina: data.meta.current_page,
+        ultima: data.meta.last_page,
       })
     } catch (err) {
       setError(err.response?.data?.message ?? 'Error al cargar partidos')

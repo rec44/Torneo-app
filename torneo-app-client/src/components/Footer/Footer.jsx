@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 import './Footer.css'
 
 const SOCIAL = [
@@ -36,11 +36,11 @@ const SOCIAL = [
 
 export function Footer() {
   return (
-    <footer className="footer">
-      <div className="footer-inner">
+    <footer className="pie">
+      <div className="pie-interior">
 
-        <div className="footer-brand-col">
-          <Link to="/torneos" className="footer-brand">
+        <div className="pie-columna-marca">
+          <Link to="/torneos" className="pie-marca">
             <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
               <path d="M5 2h10v7a5 5 0 0 1-10 0V2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
               <path d="M2 5h3M18 5h-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -48,18 +48,18 @@ export function Footer() {
             </svg>
             RiseCup
           </Link>
-          <p className="footer-tagline">Torneos deportivos con brackets automáticos y sistema ELO.</p>
+          <p className="pie-eslogan">Torneos deportivos con brackets automáticos y sistema ELO.</p>
         </div>
 
-        <div className="footer-links-row">
-          <Link to="/torneos"     className="footer-link">Torneos</Link>
-          <Link to="/mis-torneos" className="footer-link">Mis torneos</Link>
-          <Link to="/perfil"      className="footer-link">Perfil</Link>
+        <div className="pie-fila-enlaces">
+          <Link to="/torneos"     className="pie-enlace">Torneos</Link>
+          <Link to="/mis-torneos" className="pie-enlace">Mis torneos</Link>
+          <Link to="/perfil"      className="pie-enlace">Perfil</Link>
         </div>
 
-        <div className="footer-social">
+        <div className="pie-social">
           {SOCIAL.map(s => (
-            <a key={s.label} href={s.href} className="footer-social-btn"
+            <a key={s.label} href={s.href} className="pie-btn-social"
               target="_blank" rel="noreferrer" aria-label={s.label}>
               {s.icon}
             </a>
@@ -68,9 +68,9 @@ export function Footer() {
 
       </div>
 
-      <div className="footer-bottom">
+      <div className="pie-inferior">
         <span>© {new Date().getFullYear()} RiseCup</span>
-        <span className="footer-email">contacto@risecup.gg</span>
+        <span className="pie-email">contacto@risecup.gg</span>
       </div>
     </footer>
   )

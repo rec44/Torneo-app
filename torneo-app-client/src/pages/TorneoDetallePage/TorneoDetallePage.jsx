@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+﻿import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useTorneo } from '../hooks/useTorneo'
-import { useEquipos } from '../hooks/useEquipos'
-import { useAuth } from '../hooks/useAuth'
-import { BracketView } from '../components/BracketView'
-import { ResultadoModal } from '../components/ResultadoModal'
-import { partidoService } from '../services/partidoService'
+import { useTorneo } from '../../hooks/useTorneo'
+import { useEquipos } from '../../hooks/useEquipos'
+import { useAuth } from '../../hooks/useAuth'
+import { BracketView } from '../../components/BracketView'
+import { ResultadoModal } from '../../components/ResultadoModal'
+import { partidoService } from '../../services/partidoService'
 import DatePicker, { registerLocale } from 'react-datepicker'
 import jsPDF from 'jspdf'
 import { es } from 'date-fns/locale/es'
@@ -68,14 +68,14 @@ export function TorneoDetallePage() {
 
   const [tab, setTab] = useState('bracket')
 
-  // Formulario crear equipo (usado tanto por usuario como por dueño)
+  // form nuevo equipo
   const [mostrarFormCrear, setMostrarFormCrear] = useState(false)
   const [nombreNuevo, setNombreNuevo] = useState('')
   const [escudoNuevo, setEscudoNuevo] = useState(null)
   const [escudoPreview, setEscudoPreview] = useState(null)
   const [escudoCambiandoId, setEscudoCambiandoId] = useState(null)
 
-  // Edición inline de un equipo (solo dueño)
+  // editar nombre del equipo en el sitio
   const [editandoId, setEditandoId] = useState(null)
   const [nombreEditar, setNombreEditar] = useState('')
 
@@ -84,14 +84,14 @@ export function TorneoDetallePage() {
   const [confirmarEliminar,      setConfirmarEliminar]      = useState(null)
   const [confirmarBorrarTorneo,  setConfirmarBorrarTorneo]  = useState(false)
 
-  // Fechas locales de los partidos (partidoId → valor datetime-local)
+  // mapa de fechas locales por id de partido
   const [fechasPartidos, setFechasPartidos] = useState({})
   const [guardandoFecha, setGuardandoFecha] = useState({})
   const [errorFecha, setErrorFecha]         = useState({})
   const [generandoPDF, setGenerandoPDF]     = useState(false)
   const [diaSeleccionado, setDiaSeleccionado] = useState(null)
 
-  const [modalFecha,     setModalFecha]     = useState(null) // partido al que se edita la fecha
+  const [modalFecha,     setModalFecha]     = useState(null) 
   const [modalPartido,   setModalPartido]   = useState(null)
   const [invitacion,     setInvitacion]     = useState(null)
 
@@ -107,7 +107,7 @@ export function TorneoDetallePage() {
     return next
   })
 
-  // Calculado antes de los guards para poder usarlo en effects
+  
   const miEquipoPrev = torneo?.equipos?.find(e => e.miembros?.some(m => m.id === user?.id))
 
   useEffect(() => { cargar(id) }, [id, cargar])
@@ -137,11 +137,11 @@ export function TorneoDetallePage() {
   if (loading) {
     return (
       <div className="detalle-page">
-        <div className="detalle-skeleton">
-          <div className="skeleton-line skeleton-line--short" />
-          <div className="skeleton-line skeleton-line--title" />
-          <div className="skeleton-line" />
-          <div className="skeleton-line skeleton-line--short" />
+        <div className="detalle-esqueleto">
+          <div className="linea-esqueleto linea-esqueleto--corta" />
+          <div className="linea-esqueleto linea-esqueleto--titulo" />
+          <div className="linea-esqueleto" />
+          <div className="linea-esqueleto linea-esqueleto--corta" />
         </div>
       </div>
     )
@@ -152,7 +152,7 @@ export function TorneoDetallePage() {
       <div className="detalle-page">
         <div className="detalle-error">
           <p>{error ?? 'Torneo no encontrado.'}</p>
-          <button className="btn-secondary" onClick={() => navigate('/torneos')}>
+          <button className="btn-secundario" onClick={() => navigate('/torneos')}>
             Volver a torneos
           </button>
         </div>
@@ -195,7 +195,7 @@ export function TorneoDetallePage() {
     finally { setAccionLoading(false) }
   }
 
-  /* ── Handlers ─────────────────────────────────────────────── */
+  // handlers
 
   const handleEscudoChange = (e) => {
     const file = e.target.files?.[0] ?? null
@@ -367,7 +367,7 @@ export function TorneoDetallePage() {
       .filter(p => p.programado_en)
       .sort((a, b) => new Date(a.programado_en) - new Date(b.programado_en))
 
-    // ── Cabecera ──────────────────────────────────────────────────
+    // cabecera del PDF con el nombre del torneo
     doc.setFillColor(249, 115, 22)
     doc.rect(0, 0, anchoPage, 26, 'F')
     doc.setTextColor(255, 255, 255)
@@ -387,7 +387,7 @@ export function TorneoDetallePage() {
       return
     }
 
-    // ── Grid de calendario por mes ────────────────────────────────
+    // el mini calendario mensual
     const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
     const porMes = {}
     conFecha.forEach(p => {
@@ -454,14 +454,13 @@ export function TorneoDetallePage() {
       .sort((a, b) => a.año !== b.año ? a.año - b.año : a.mes - b.mes)
       .forEach(({ año, mes, dias }) => dibujarMes(año, mes, dias))
 
-    // ── Divisor ───────────────────────────────────────────────────
     nuevaPagina(10)
     doc.setDrawColor(232, 227, 219)
     doc.setLineWidth(0.4)
     doc.line(M, y, M + anchoUtil, y)
     y += 8
 
-    // ── Lista de partidos por ronda ───────────────────────────────
+    // lista de partidos agrupada por ronda
     rondasUnicas.forEach(ronda => {
       const ps = conFecha.filter(p => p.ronda === ronda)
       if (ps.length === 0) return
@@ -480,15 +479,26 @@ export function TorneoDetallePage() {
         const fecha    = new Date(p.programado_en)
         const fechaStr = fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
         const horaStr  = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-        const eq1 = p.equipo1?.nombre ?? 'TBD'
-        const eq2 = p.equipo2?.nombre ?? 'TBD'
+        const eq1 = p.equipo1?.nombre ?? 'Por definir'
+        const eq2 = p.equipo2?.nombre ?? 'Por definir'
 
         doc.setFillColor(249, 115, 22)
         doc.rect(M, y + 1, 2, 8, 'F')
-        doc.setTextColor(24, 21, 14)
         doc.setFontSize(10)
         doc.setFont('helvetica', 'bold')
-        doc.text(`${eq1}  vs  ${eq2}`, M + 6, y + 6)
+
+        doc.setTextColor(...(p.equipo1 ? [24, 21, 14] : [160, 155, 148]))
+        doc.text(eq1, M + 6, y + 6)
+        const anchoEq1 = doc.getTextWidth(eq1)
+
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(120, 115, 106)
+        doc.text('  vs  ', M + 6 + anchoEq1, y + 6)
+        const anchoVs = doc.getTextWidth('  vs  ')
+
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...(p.equipo2 ? [24, 21, 14] : [160, 155, 148]))
+        doc.text(eq2, M + 6 + anchoEq1 + anchoVs, y + 6)
         doc.setTextColor(120, 115, 106)
         doc.setFontSize(8)
         doc.setFont('helvetica', 'normal')
@@ -498,7 +508,7 @@ export function TorneoDetallePage() {
       y += 3
     })
 
-    // ── Pie ───────────────────────────────────────────────────────
+    // pie de página
     doc.setTextColor(200, 200, 200)
     doc.setFontSize(7)
     doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} · RiseCup`, M, 291)
@@ -514,7 +524,7 @@ export function TorneoDetallePage() {
 
   const handleGuardarFecha = async (partidoId) => {
     const valorLocal = fechasPartidos[partidoId]
-    // fechasPartidos almacena hora local — convertir a UTC antes de enviar a la API
+    // el input devuelve hora local, hay que pasar a UTC antes de enviar
     const valorUTC = valorLocal ? new Date(valorLocal).toISOString().slice(0, 16) : null
     setGuardandoFecha(prev => ({ ...prev, [partidoId]: true }))
     setErrorFecha(prev => ({ ...prev, [partidoId]: null }))
@@ -538,7 +548,7 @@ export function TorneoDetallePage() {
     })
   }
 
-  /* ── Datos ordenados + confirmación ──────────────────────── */
+  // variables derivadas del torneo
 
   const minMiembros = torneo.min_miembros ?? 1
 
@@ -560,11 +570,9 @@ export function TorneoDetallePage() {
     .filter(p => p.resultado_e1 !== null && p.resultado_e2 !== null)
     .sort((a, b) => (b.ronda ?? 0) - (a.ronda ?? 0))
 
-  /* ── Render ───────────────────────────────────────────────── */
-
   return (
     <div className="detalle-page">
-      {/* Breadcrumb */}
+      {/* volver atrás */}
       <button className="btn-volver" onClick={() => navigate(-1)}>
         <svg viewBox="0 0 16 16" fill="none" width="14" height="14" aria-hidden="true">
           <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -572,14 +580,14 @@ export function TorneoDetallePage() {
         Volver
       </button>
 
-      {/* Header */}
+      {/* cabecera del torneo */}
       <header className="detalle-header">
         <div className="detalle-header-top">
           <div className="detalle-header-badges">
             {torneo.deporte && (
-              <span className="badge-deporte">{torneo.deporte.nombre}</span>
+              <span className="insignia-deporte">{torneo.deporte.nombre}</span>
             )}
-            <span className={`badge-estado badge-estado--${torneo.estado}`}>
+            <span className={`insignia-estado insignia-estado--${torneo.estado}`}>
               {ESTADO_LABELS[torneo.estado] ?? torneo.estado}
             </span>
           </div>
@@ -665,11 +673,11 @@ export function TorneoDetallePage() {
           )}
         </dl>
 
-        {/* Acciones de participación — solo si no está ya en un equipo */}
+        {/* botón para crear equipo si aún no estás en ninguno */}
         {user && !yaEnEquipo && torneo.estado === 'abierto' && (
           <div className="detalle-acciones">
             <button
-              className="btn-primary"
+              className="btn-primario"
               onClick={() => setMostrarFormCrear(v => !v)}
             >
               Crear equipo
@@ -677,24 +685,24 @@ export function TorneoDetallePage() {
           </div>
         )}
 
-        {/* Formulario crear equipo */}
+        {/* form crear equipo */}
         {mostrarFormCrear && puedeCrearEquipo && (
-          <form className="detalle-form-inline" onSubmit={handleCrearEquipo}>
+          <form className="detalle-formulario-inline" onSubmit={handleCrearEquipo}>
             <input
-              type="text" className="filtro-input" placeholder="Nombre del equipo"
+              type="text" className="filtro-entrada" placeholder="Nombre del equipo"
               value={nombreNuevo} onChange={e => setNombreNuevo(e.target.value)}
               maxLength={100} required
             />
-            <label className="btn-secondary escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
+            <label className="btn-secundario escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
               {escudoPreview
                 ? <img src={escudoPreview} alt="preview" className="escudo-preview-mini" />
                 : '🖼 Escudo'}
               <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleEscudoChange} />
             </label>
-            <button type="submit" className="btn-primary" disabled={accionLoading}>
+            <button type="submit" className="btn-primario" disabled={accionLoading}>
               {accionLoading ? 'Creando…' : 'Crear'}
             </button>
-            <button type="button" className="btn-secondary" onClick={resetFormCrear}>
+            <button type="button" className="btn-secundario" onClick={resetFormCrear}>
               Cancelar
             </button>
           </form>
@@ -703,7 +711,7 @@ export function TorneoDetallePage() {
         {accionError && <p className="detalle-accion-error">{accionError}</p>}
         {accionOk    && <p className="detalle-accion-ok">{accionOk}</p>}
 
-        {/* Confirmar inicio — cuando ya se han asignado las fechas */}
+        {/* botón confirmar inicio */}
         {puedeConfirmar && (
           <div className="detalle-acciones-iniciar">
             {!todasTienenFecha && (
@@ -726,7 +734,7 @@ export function TorneoDetallePage() {
           </div>
         )}
 
-        {/* Acción iniciar torneo — separada visualmente */}
+        {/* botón iniciar torneo */}
         {puedeIniciar && (
           <div className="detalle-acciones-iniciar">
             {!cumpleMinimo && (
@@ -761,8 +769,8 @@ export function TorneoDetallePage() {
         )}
       </header>
 
-      {/* Tabs */}
-      <div className="detalle-tabs" role="tablist">
+      {/* pestañas de navegación */}
+      <div className="detalle-pestanas" role="tablist">
         {ALL_TABS.filter(t => {
           if (t === 'mi_equipo') return yaEnEquipo
           if (t === 'bracket')   return torneo.estado !== 'abierto'
@@ -770,20 +778,19 @@ export function TorneoDetallePage() {
           return true
         }).map(t => (
           <button key={t} role="tab" aria-selected={tab === t}
-            className={`detalle-tab ${tab === t ? 'detalle-tab--activo' : ''}`}
+            className={`detalle-pestana ${tab === t ? 'detalle-pestana--activo' : ''}`}
             onClick={() => setTab(t)}
           >
             {TAB_LABELS[t]}
-            {t === 'equipos'   && <span className="tab-count">{torneo.equipos?.length ?? 0}</span>}
-            {t === 'mi_equipo' && <span className="tab-count">{miEquipo?.miembros?.length ?? 0}</span>}
+            {t === 'equipos'   && <span className="pestana-contador">{torneo.equipos?.length ?? 0}</span>}
+            {t === 'mi_equipo' && <span className="pestana-contador">{miEquipo?.miembros?.length ?? 0}</span>}
           </button>
         ))}
       </div>
 
-      {/* Contenido */}
       <div className="detalle-contenido">
 
-        {/* ── BRACKET ──────────────────────────────────────── */}
+        {/* bracket */}
         {tab === 'bracket' && (
           <BracketView
             partidos={partidosOrdenados}
@@ -793,7 +800,7 @@ export function TorneoDetallePage() {
           />
         )}
 
-        {/* ── CALENDARIO ───────────────────────────────────── */}
+        {/* calendario */}
         {tab === 'calendario' && (
           <div className="calendario-tab">
 
@@ -825,7 +832,7 @@ export function TorneoDetallePage() {
             ) : (
               <div className="calendario-layout">
 
-                {/* ── Columna izquierda: calendario mensual ── */}
+                {/* minicalendario mensual */}
                 <div className="calendario-col-izq">
                   <DatePicker
                     inline
@@ -837,14 +844,14 @@ export function TorneoDetallePage() {
                       .filter(p => p.programado_en)
                       .map(p => new Date(p.programado_en))
                     }
-                    calendarClassName="calendario-datepicker-calendar calendario-inline"
+                    calendarClassName="calendario-selector-calendario calendario-inline"
                   />
                   <p className="calendario-leyenda">
-                    <span className="calendario-leyenda-dot" /> Días con partido
+                    <span className="calendario-leyenda-punto" /> Días con partido
                   </p>
                 </div>
 
-                {/* ── Columna derecha: partidos del día seleccionado ── */}
+                {/* partidos del día que se ha pinchado */}
                 <div className="calendario-col-der">
                   {!diaSeleccionado ? (
                     <div className="calendario-placeholder">
@@ -890,9 +897,9 @@ export function TorneoDetallePage() {
                                 <div className="calendario-dia-info">
                                   <span className="calendario-dia-ronda">{labelRonda(partido.ronda)}</span>
                                   <div className="calendario-partido-equipos">
-                                    <span className="calendario-equipo">{partido.equipo1?.nombre ?? 'TBD'}</span>
+                                    <span className={`calendario-equipo${!partido.equipo1 ? ' nombre-pendiente' : ''}`}>{partido.equipo1?.nombre ?? 'Por definir'}</span>
                                     <span className="calendario-vs">vs</span>
-                                    <span className="calendario-equipo">{partido.equipo2?.nombre ?? 'TBD'}</span>
+                                    <span className={`calendario-equipo${!partido.equipo2 ? ' nombre-pendiente' : ''}`}>{partido.equipo2?.nombre ?? 'Por definir'}</span>
                                   </div>
                                 </div>
                                 {puedeEditar && (
@@ -912,7 +919,7 @@ export function TorneoDetallePage() {
                           })
                         )}
 
-                        {/* Partidos sin fecha — solo para organizador en programacion */}
+                        {/* sin fecha */}
                         {puedeEditar && sinFechaCount > 0 && (
                           <div className="calendario-sin-fecha-lista">
                             <h4 className="calendario-sin-fecha-titulo">Sin fecha asignada ({sinFechaCount})</h4>
@@ -927,9 +934,9 @@ export function TorneoDetallePage() {
                                   <div className="calendario-dia-info">
                                     <span className="calendario-dia-ronda">{labelRonda(partido.ronda)}</span>
                                     <div className="calendario-partido-equipos">
-                                      <span className="calendario-equipo">{partido.equipo1?.nombre ?? 'TBD'}</span>
+                                      <span className="calendario-equipo">{partido.equipo1?.nombre ?? 'Por definir'}</span>
                                       <span className="calendario-vs">vs</span>
-                                      <span className="calendario-equipo">{partido.equipo2?.nombre ?? 'TBD'}</span>
+                                      <span className="calendario-equipo">{partido.equipo2?.nombre ?? 'Por definir'}</span>
                                     </div>
                                   </div>
                                   <button
@@ -956,37 +963,37 @@ export function TorneoDetallePage() {
           </div>
         )}
 
-        {/* ── EQUIPOS ──────────────────────────────────────── */}
+        {/* equipos */}
         {tab === 'equipos' && (
           <div className="equipos-lista">
 
-            {/* Botón crear equipo para el organizador */}
+            {/* el organizador también puede crear equipos desde esta tab */}
             {esOrganizador && torneo.estado === 'abierto' && (
-              <div className="equipos-owner-toolbar">
+              <div className="equipos-barra-organizador">
                 {!mostrarFormCrear ? (
                   <button
-                    className="btn-primary"
+                    className="btn-primario"
                     onClick={() => { setMostrarFormCrear(true); setEditandoId(null) }}
                   >
                     + Crear equipo
                   </button>
                 ) : (
-                  <form className="detalle-form-inline" onSubmit={handleCrearEquipo}>
+                  <form className="detalle-formulario-inline" onSubmit={handleCrearEquipo}>
                     <input
-                      type="text" className="filtro-input" placeholder="Nombre del equipo"
+                      type="text" className="filtro-entrada" placeholder="Nombre del equipo"
                       value={nombreNuevo} onChange={e => setNombreNuevo(e.target.value)}
                       maxLength={100} autoFocus required
                     />
-                    <label className="btn-secondary escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
+                    <label className="btn-secundario escudo-upload-label" title="Subir escudo (jpg/png/webp, máx. 2 MB)">
                       {escudoPreview
                         ? <img src={escudoPreview} alt="preview" className="escudo-preview-mini" />
                         : '🖼 Escudo'}
                       <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleEscudoChange} />
                     </label>
-                    <button type="submit" className="btn-primary" disabled={accionLoading}>
+                    <button type="submit" className="btn-primario" disabled={accionLoading}>
                       {accionLoading ? 'Creando…' : 'Crear'}
                     </button>
-                    <button type="button" className="btn-secondary" onClick={resetFormCrear}>
+                    <button type="button" className="btn-secundario" onClick={resetFormCrear}>
                       Cancelar
                     </button>
                   </form>
@@ -1005,11 +1012,11 @@ export function TorneoDetallePage() {
                 const confirmado    = numMiembros >= minMiembros
 
                 return (
-                  <div key={equipo.id} className={`equipo-card ${esMiEquipo ? 'equipo-card--propio' : ''} ${equipo.bloqueado ? 'equipo-card--inscrito' : ''}`}>
-                    {/* Cabecera del equipo */}
-                    <div className="equipo-card-header">
-                      <div className="equipo-card-header-left">
-                        {/* Escudo */}
+                  <div key={equipo.id} className={`tarjeta-equipo ${esMiEquipo ? 'tarjeta-equipo--propio' : ''} ${equipo.bloqueado ? 'tarjeta-equipo--inscrita' : ''}`}>
+                    {/* cabecera tarjeta equipo */}
+                    <div className="tarjeta-equipo-cabecera">
+                      <div className="tarjeta-equipo-cabecera-izq">
+                        {/* escudo */}
                         <div className="equipo-escudo-wrap">
                           {equipo.escudo_url
                             ? <img src={equipo.escudo_url} alt={`Escudo ${equipo.nombre}`} className="equipo-escudo" />
@@ -1034,11 +1041,11 @@ export function TorneoDetallePage() {
                               onChange={e => setNombreEditar(e.target.value)}
                               maxLength={100} autoFocus required
                             />
-                            <button type="submit" className="btn-primary btn--sm"
+                            <button type="submit" className="btn-primario btn--pequeno"
                               disabled={accionLoading}>
                               {accionLoading ? '…' : 'Guardar'}
                             </button>
-                            <button type="button" className="btn-secondary btn--sm"
+                            <button type="button" className="btn-secundario btn--pequeno"
                               onClick={() => setEditandoId(null)}>
                               Cancelar
                             </button>
@@ -1050,20 +1057,20 @@ export function TorneoDetallePage() {
                               <span className="equipo-semilla">#{equipo.semilla}</span>
                             )}
                             {equipo.bloqueado && (
-                              <span className="badge-inscrito-confirmado">
+                              <span className="insignia-inscrito-confirmado">
                                 <svg viewBox="0 0 12 12" fill="none" width="11" height="11" aria-hidden="true">
                                   <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
                                 Inscrito
                               </span>
                             )}
-                            {esMiEquipo && <span className="badge-mi-equipo">Mi equipo</span>}
+                            {esMiEquipo && <span className="insignia-mi-equipo">Mi equipo</span>}
                           </>
                         )}
                         </div>
                       </div>
 
-                      <div className="equipo-card-acciones">
+                      <div className="tarjeta-equipo-acciones">
                         <span className="equipo-capitan">Cap. {equipo.capitan?.nombre}</span>
                         {esOrganizador && !estaEditando && torneo.estado === 'abierto' && (
                           <>
@@ -1094,7 +1101,7 @@ export function TorneoDetallePage() {
                       </div>
                     </div>
 
-                    {/* Toggle miembros */}
+                    {/* toggle */}
                     <button
                       className="equipo-toggle-btn"
                       onClick={() => toggleExpandido(equipo.id)}
@@ -1120,7 +1127,7 @@ export function TorneoDetallePage() {
                       </svg>
                     </button>
 
-                    {/* Miembros (desplegable) */}
+                    {/* miembros */}
                     {expandidos.has(equipo.id) && (
                       <div className="equipo-miembros">
                         {numMiembros === 0
@@ -1140,7 +1147,7 @@ export function TorneoDetallePage() {
                       </div>
                     )}
 
-                    {/* Botón unirse (usuario normal) */}
+                    {/* unirse */}
                     {puedoUnirme && !(torneo.max_miembros && equipo.miembros?.length >= torneo.max_miembros) && (
                       <button className="btn-unirse-equipo"
                         onClick={() => handleUnirseEquipo(equipo.id)} disabled={accionLoading}>
@@ -1148,7 +1155,7 @@ export function TorneoDetallePage() {
                       </button>
                     )}
 
-                    {/* Botón desinscribirse (solo el capitán, torneo abierto) */}
+                    {/* desinscribirse */}
                     {!esOrganizador && equipo.capitan?.id === user?.id && torneo.estado === 'abierto' && (
                       <button className="btn-desinscribirse"
                         onClick={() => handleDesinscribirse(equipo)} disabled={accionLoading}>
@@ -1162,11 +1169,11 @@ export function TorneoDetallePage() {
           </div>
         )}
 
-        {/* ── MI EQUIPO ────────────────────────────────────── */}
+        {/* mi equipo */}
         {tab === 'mi_equipo' && miEquipo && (
           <div className="mi-equipo-tab">
 
-            {/* Cabecera */}
+            {/* cabecera mi equipo */}
             <div className="mi-equipo-header">
               <div className="mi-equipo-header-info">
                 <div className="equipo-escudo-wrap" style={{ marginRight: 12, flexShrink: 0 }}>
@@ -1187,7 +1194,7 @@ export function TorneoDetallePage() {
                 <div>
                 <h3 className="mi-equipo-nombre">{miEquipo.nombre}</h3>
                 {miEquipo.bloqueado && (
-                  <span className="badge-inscrito-confirmado">
+                  <span className="insignia-inscrito-confirmado">
                     <svg viewBox="0 0 12 12" fill="none" width="11" height="11" aria-hidden="true">
                       <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -1195,7 +1202,7 @@ export function TorneoDetallePage() {
                   </span>
                 )}
                 {miEquipo.bloqueado && (
-                  <span className="badge-bloqueado">Bloqueado</span>
+                  <span className="insignia-bloqueada">Bloqueado</span>
                 )}
                 </div>
               </div>
@@ -1215,13 +1222,13 @@ export function TorneoDetallePage() {
               )}
             </div>
 
-            {/* Lista de miembros */}
+            {/* miembros */}
             <div className="mi-equipo-miembros">
               {miEquipo.miembros?.map(m => (
                 <div key={m.id} className="mi-equipo-miembro">
                   <div className="mi-equipo-miembro-info">
                     <Link to={`/usuarios/${m.id}`} className="mi-equipo-miembro-nombre mi-equipo-miembro-link">{m.nombre}</Link>
-                    {m.id === miEquipo.capitan?.id && <span className="badge-capitan">Capitán</span>}
+                    {m.id === miEquipo.capitan?.id && <span className="insignia-capitan">Capitán</span>}
                     <span className="mi-equipo-miembro-elo">ELO {m.pivot?.elo_al_unirse ?? m.elo}</span>
                   </div>
                   {(esCapitan || esOrganizador) && m.id !== miEquipo.capitan?.id && torneo.estado === 'abierto' && (
@@ -1237,26 +1244,26 @@ export function TorneoDetallePage() {
               ))}
             </div>
 
-            {/* Invitar jugadores */}
+            {/* invitaciones — solo si el equipo no está bloqueado */}
             {(esCapitan || esOrganizador) && torneo.estado === 'abierto' && !miEquipo.bloqueado && (
               <div className="mi-equipo-invitar">
                 {invitacion?.codigo ? (
                   <div className="invitacion-codigo">
-                    <code className="invitacion-codigo-text">
+                    <code className="invitacion-codigo-texto">
                       {`${window.location.origin}/unirse/${invitacion.codigo}`}
                     </code>
-                    <button className="btn-secondary btn--sm"
+                    <button className="btn-secundario btn--pequeno"
                       onClick={() => handleCopiarCodigo(`${window.location.origin}/unirse/${invitacion.codigo}`)}>
                       {copiadoOk ? '¡Copiado!' : 'Copiar'}
                     </button>
-                    <button className="btn-secondary btn--sm"
+                    <button className="btn-secundario btn--pequeno"
                       onClick={() => setInvitacion(null)}>
                       Ocultar
                     </button>
                   </div>
                 ) : (
                   <button
-                    className="btn-secondary"
+                    className="btn-secundario"
                     onClick={handleGenerarCodigoMiEquipo}
                     disabled={invitacion?.loading}
                   >
@@ -1266,7 +1273,7 @@ export function TorneoDetallePage() {
               </div>
             )}
 
-            {/* Retirar equipo */}
+            {/* retirar equipo del torneo */}
             {esCapitan && !esOrganizador && torneo.estado === 'abierto' && (
               <div className="mi-equipo-retirar">
                 <button
@@ -1282,7 +1289,7 @@ export function TorneoDetallePage() {
           </div>
         )}
 
-        {/* ── PARTIDOS ─────────────────────────────────────── */}
+        {/* historial de partidos */}
         {tab === 'partidos' && (
           <div className="partidos-historial">
             {partidosHistorial.length === 0 ? (
@@ -1294,13 +1301,13 @@ export function TorneoDetallePage() {
                 const deltaPropio = enEquipo1 ? p.delta_elo_e1 : enEquipo2 ? p.delta_elo_e2 : null
                 const abierto    = expandidos.has(p.id)
 
-                // Buscar los equipos completos (con miembros) en torneo.equipos
+                // necesitamos el equipo completo para mostrar el ELO de cada miembro
                 const eq1 = (torneo.equipos ?? []).find(e => e.id === p.equipo1?.id)
                 const eq2 = (torneo.equipos ?? []).find(e => e.id === p.equipo2?.id)
 
                 return (
                   <div key={p.id} className="partido-bloque">
-                    {/* Fila principal — clickable para expandir */}
+                    {/* fila resumen */}
                     <div
                       className={`partido-fila partido-fila--${p.estado} partido-fila--clickable`}
                       onClick={() => toggleExpandido(p.id)}
@@ -1309,17 +1316,17 @@ export function TorneoDetallePage() {
                     >
                       <span className="partido-ronda">R{p.ronda ?? '?'}</span>
                       <div className="partido-enfrentamiento">
-                        <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : ''}>
-                          {p.equipo1?.nombre ?? 'TBD'}
+                        <span className={p.ganador_equipo_id === p.equipo1?.id ? 'partido-ganador' : (!p.equipo1 ? 'nombre-pendiente' : '')}>
+                          {p.equipo1?.nombre ?? 'Por definir'}
                         </span>
                         <span className="partido-resultado">
                           {p.resultado_e1} – {p.resultado_e2}
                         </span>
-                        <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : ''}>
-                          {p.equipo2?.nombre ?? 'TBD'}
+                        <span className={p.ganador_equipo_id === p.equipo2?.id ? 'partido-ganador' : (!p.equipo2 ? 'nombre-pendiente' : '')}>
+                          {p.equipo2?.nombre ?? 'Por definir'}
                         </span>
                       </div>
-                      <span className={`badge-partido-estado badge-partido-estado--${p.estado}`}>
+                      <span className={`insignia-partido-estado insignia-partido-estado--${p.estado}`}>
                         {ESTADO_PARTIDO_LABELS[p.estado] ?? p.estado}
                       </span>
                       {deltaPropio !== null && (
@@ -1333,7 +1340,7 @@ export function TorneoDetallePage() {
                       </svg>
                     </div>
 
-                    {/* Panel expandido con miembros y ELO */}
+                    {/* detalle */}
                     {abierto && (
                       <div className="partido-detalle">
                         {[
@@ -1394,9 +1401,9 @@ export function TorneoDetallePage() {
       </div>
 
       {confirmarBorrarTorneo && (
-        <div className="modal-overlay" onMouseDown={() => setConfirmarBorrarTorneo(false)}>
-          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="modal-fondo" onMouseDown={() => setConfirmarBorrarTorneo(false)}>
+          <div className="modal-tarjeta" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-cabecera">
               <h3 className="modal-titulo">¿Eliminar torneo?</h3>
               <button className="modal-cerrar" onClick={() => setConfirmarBorrarTorneo(false)} aria-label="Cerrar">
                 <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
@@ -1404,16 +1411,16 @@ export function TorneoDetallePage() {
                 </svg>
               </button>
             </div>
-            <div className="modal-form">
+            <div className="modal-formulario">
               <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
                 Se eliminará el torneo <strong>{torneo.nombre}</strong> junto con todos sus equipos e inscripciones.
                 Esta acción no se puede deshacer.
               </p>
               <div className="modal-acciones">
-                <button className="btn-secondary" onClick={() => setConfirmarBorrarTorneo(false)} disabled={accionLoading}>
+                <button className="btn-secundario" onClick={() => setConfirmarBorrarTorneo(false)} disabled={accionLoading}>
                   Cancelar
                 </button>
-                <button className="btn-eliminar-confirm" onClick={async () => { setConfirmarBorrarTorneo(false); await handleEliminarTorneo() }} disabled={accionLoading}>
+                <button className="btn-eliminar-confirmar" onClick={async () => { setConfirmarBorrarTorneo(false); await handleEliminarTorneo() }} disabled={accionLoading}>
                   {accionLoading ? 'Eliminando…' : 'Sí, eliminar'}
                 </button>
               </div>
@@ -1423,9 +1430,9 @@ export function TorneoDetallePage() {
       )}
 
       {confirmarEliminar && (
-        <div className="modal-overlay" onMouseDown={() => setConfirmarEliminar(null)}>
-          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="modal-fondo" onMouseDown={() => setConfirmarEliminar(null)}>
+          <div className="modal-tarjeta" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-cabecera">
               <h3 className="modal-titulo">¿Eliminar equipo?</h3>
               <button className="modal-cerrar" onClick={() => setConfirmarEliminar(null)} aria-label="Cerrar">
                 <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
@@ -1433,16 +1440,16 @@ export function TorneoDetallePage() {
                 </svg>
               </button>
             </div>
-            <div className="modal-form">
+            <div className="modal-formulario">
               <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
                 Se eliminará el equipo <strong>{confirmarEliminar.nombre}</strong> y todos sus miembros
                 serán desinscritos. Esta acción no se puede deshacer.
               </p>
               <div className="modal-acciones">
-                <button className="btn-secondary" onClick={() => setConfirmarEliminar(null)} disabled={accionLoading}>
+                <button className="btn-secundario" onClick={() => setConfirmarEliminar(null)} disabled={accionLoading}>
                   Cancelar
                 </button>
-                <button className="btn-eliminar-confirm" onClick={confirmarEliminarEquipo} disabled={accionLoading}>
+                <button className="btn-eliminar-confirmar" onClick={confirmarEliminarEquipo} disabled={accionLoading}>
                   {accionLoading ? 'Eliminando…' : 'Sí, eliminar'}
                 </button>
               </div>
@@ -1452,9 +1459,9 @@ export function TorneoDetallePage() {
       )}
 
       {confirmarIniciar && (
-        <div className="modal-overlay" onMouseDown={() => setConfirmarIniciar(false)}>
-          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="modal-fondo" onMouseDown={() => setConfirmarIniciar(false)}>
+          <div className="modal-tarjeta" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-cabecera">
               <h3 className="modal-titulo">¿Iniciar el torneo?</h3>
               <button className="modal-cerrar" onClick={() => setConfirmarIniciar(false)} aria-label="Cerrar">
                 <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
@@ -1462,7 +1469,7 @@ export function TorneoDetallePage() {
                 </svg>
               </button>
             </div>
-            <div className="modal-form">
+            <div className="modal-formulario">
               <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
                 Se generará el bracket y el torneo pasará a fase de <strong>Programación</strong>.
                 Después podrás asignar fechas a cada partido y confirmar el inicio.
@@ -1471,7 +1478,7 @@ export function TorneoDetallePage() {
                 )}
               </p>
               <div className="modal-acciones">
-                <button className="btn-secondary" onClick={() => setConfirmarIniciar(false)} disabled={accionLoading}>
+                <button className="btn-secundario" onClick={() => setConfirmarIniciar(false)} disabled={accionLoading}>
                   Cancelar
                 </button>
                 <button
@@ -1488,9 +1495,9 @@ export function TorneoDetallePage() {
       )}
 
       {confirmarConfirmar && (
-        <div className="modal-overlay" onMouseDown={() => setConfirmarConfirmar(false)}>
-          <div className="modal-card" onMouseDown={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="modal-fondo" onMouseDown={() => setConfirmarConfirmar(false)}>
+          <div className="modal-tarjeta" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-cabecera">
               <h3 className="modal-titulo">¿Confirmar inicio del torneo?</h3>
               <button className="modal-cerrar" onClick={() => setConfirmarConfirmar(false)} aria-label="Cerrar">
                 <svg viewBox="0 0 16 16" fill="none" width="16" height="16" aria-hidden="true">
@@ -1498,13 +1505,13 @@ export function TorneoDetallePage() {
                 </svg>
               </button>
             </div>
-            <div className="modal-form">
+            <div className="modal-formulario">
               <p style={{ margin: 0, color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
                 El torneo pasará a <strong>En curso</strong> y los resultados podrán registrarse.
                 Las fechas de los partidos aún podrán editarse después.
               </p>
               <div className="modal-acciones">
-                <button className="btn-secondary" onClick={() => setConfirmarConfirmar(false)} disabled={accionLoading}>
+                <button className="btn-secundario" onClick={() => setConfirmarConfirmar(false)} disabled={accionLoading}>
                   Cancelar
                 </button>
                 <button
@@ -1521,15 +1528,15 @@ export function TorneoDetallePage() {
       )}
 
       {modalFecha && (
-        <div className="modal-overlay" onMouseDown={() => setModalFecha(null)}>
-          <div className="modal-card modal-card--fecha" onMouseDown={e => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="modal-fondo" onMouseDown={() => setModalFecha(null)}>
+          <div className="modal-tarjeta modal-tarjeta--fecha" onMouseDown={e => e.stopPropagation()}>
+            <div className="modal-cabecera">
               <div>
                 <h3 className="modal-titulo">Editar fecha del partido</h3>
                 <p className="modal-subtitulo">
-                  <span>{modalFecha.equipo1?.nombre ?? 'TBD'}</span>
+                  <span className={!modalFecha.equipo1 ? 'nombre-pendiente' : ''}>{modalFecha.equipo1?.nombre ?? 'Por definir'}</span>
                   <span style={{ margin: '0 6px', color: 'var(--text)' }}>vs</span>
-                  <span>{modalFecha.equipo2?.nombre ?? 'TBD'}</span>
+                  <span className={!modalFecha.equipo2 ? 'nombre-pendiente' : ''}>{modalFecha.equipo2?.nombre ?? 'Por definir'}</span>
                   <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text)' }}>· {labelRonda(modalFecha.ronda)}</span>
                 </p>
               </div>
@@ -1539,8 +1546,8 @@ export function TorneoDetallePage() {
                 </svg>
               </button>
             </div>
-            <div className="modal-form">
-              <div className="modal-fecha-picker">
+            <div className="modal-formulario">
+              <div className="modal-fecha-selector">
                 <DatePicker
                   inline
                   selected={fechasPartidos[modalFecha.id] ? new Date(fechasPartidos[modalFecha.id]) : null}
@@ -1556,14 +1563,14 @@ export function TorneoDetallePage() {
                   timeIntervals={15}
                   timeCaption="Hora"
                   locale="es"
-                  calendarClassName="calendario-datepicker-calendar calendario-inline"
+                  calendarClassName="calendario-selector-calendario calendario-inline"
                 />
               </div>
               {errorFecha[modalFecha.id] && (
                 <p className="calendario-error-fecha">{errorFecha[modalFecha.id]}</p>
               )}
               <div className="modal-acciones">
-                <button className="btn-secondary" onClick={() => setModalFecha(null)}>
+                <button className="btn-secundario" onClick={() => setModalFecha(null)}>
                   Cancelar
                 </button>
                 <button

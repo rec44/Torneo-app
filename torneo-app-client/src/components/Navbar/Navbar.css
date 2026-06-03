@@ -1,6 +1,6 @@
-/* ─── Navbar shell ──────────────────────────────────────────── */
+﻿/* ─── barra-nav shell ──────────────────────────────────────────── */
 
-.navbar {
+.barra-nav {
   display: flex;
   align-items: center;
   gap: 0;
@@ -29,7 +29,7 @@
 
 /* ─── Hamburguesa — solo móvil ──────────────────────────────── */
 
-.navbar-hamburguesa {
+.barra-nav-hamburguesa {
   display: none;
   align-items: center;
   justify-content: center;
@@ -53,7 +53,7 @@
 
 /* ─── Brand ─────────────────────────────────────────────────── */
 
-.navbar-brand {
+.barra-nav-marca {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -72,7 +72,7 @@
   }
 }
 
-.navbar-brand-icon {
+.barra-nav-marca-icono {
   width: 22px;
   height: 22px;
   flex-shrink: 0;
@@ -81,7 +81,7 @@
 
 /* ─── Divider ───────────────────────────────────────────────── */
 
-.navbar-divider {
+.barra-nav-divisor {
   width: 1px;
   height: 22px;
   background: var(--border);
@@ -93,7 +93,7 @@
 
 /* ─── Nav links ─────────────────────────────────────────────── */
 
-.navbar-links {
+.barra-nav-enlaces {
   display: flex;
   gap: 0;
   flex: 1;
@@ -101,7 +101,7 @@
   @media (max-width: 768px) { display: none; }
 }
 
-.navbar-link {
+.barra-nav-enlace {
   padding: 0 16px;
   height: 72px;
   display: inline-flex;
@@ -117,7 +117,7 @@
   &:hover { color: var(--text-h); }
 }
 
-.navbar-link--active {
+.barra-nav-enlace--activo {
   color: var(--text-h);
   font-weight: 600;
   border-bottom-color: var(--accent);
@@ -126,7 +126,7 @@
 
 /* ─── User section ──────────────────────────────────────────── */
 
-.navbar-user {
+.barra-nav-usuario {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -136,21 +136,21 @@
   @media (max-width: 768px) {
     gap: 8px;
     /* Ocultar logout y ghost en móvil (van en el menú) */
-    .navbar-btn-logout { display: none; }
-    .navbar-btn-ghost  { display: none; }
-    .navbar-btn-accent { display: none; }
-    .navbar-username   { display: none; }
-    .navbar-btn-admin  { display: none; }
+    .barra-nav-btn-salir { display: none; }
+    .barra-nav-btn-fantasma  { display: none; }
+    .barra-nav-btn-acento { display: none; }
+    .barra-nav-nombre-usuario   { display: none; }
+    .barra-nav-btn-admin  { display: none; }
   }
 }
 
-.navbar-user-info {
+.barra-nav-info-usuario {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.navbar-avatar {
+.barra-nav-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -164,7 +164,7 @@
   flex-shrink: 0;
 }
 
-.navbar-username {
+.barra-nav-nombre-usuario {
   font-size: 15px;
   font-weight: 500;
   color: var(--text);
@@ -174,7 +174,7 @@
 
 /* ─── Buttons ───────────────────────────────────────────────── */
 
-.navbar-btn-admin {
+.barra-nav-btn-admin {
   padding: 6px 14px;
   font-size: 12.5px;
   font-weight: 700;
@@ -188,7 +188,7 @@
   &:hover { opacity: 0.72; }
 }
 
-.navbar-btn-logout {
+.barra-nav-btn-salir {
   padding: 7px 16px;
   font-size: 14px;
   font-family: var(--sans);
@@ -202,7 +202,7 @@
   &:hover { color: var(--text-h); border-color: var(--text); }
 }
 
-.navbar-btn-ghost {
+.barra-nav-btn-fantasma {
   padding: 7px 16px;
   font-size: 14px;
   font-weight: 500;
@@ -214,7 +214,7 @@
   &:hover { color: var(--text-h); border-color: var(--text); }
 }
 
-.navbar-btn-accent {
+.barra-nav-btn-acento {
   padding: 8px 18px;
   font-size: 13.5px;
   font-weight: 700;
@@ -230,7 +230,7 @@
 
 /* ─── Dropdown móvil ────────────────────────────────────────── */
 
-.navbar-mobile-menu {
+.barra-nav-menu-movil {
   display: none;
   flex-direction: column;
   background: color-mix(in srgb, var(--bg) 96%, transparent);
@@ -247,7 +247,7 @@
   }
 }
 
-.mobile-link {
+.movil-enlace {
   padding: 13px 24px;
   font-size: 15px;
   font-weight: 500;
@@ -263,12 +263,12 @@
   }
 }
 
-.mobile-link--accent {
+.movil-enlace--acento {
   color: var(--accent);
   font-weight: 700;
 }
 
-.mobile-link--salir {
+.movil-enlace--salir {
   width: 100%;
   text-align: left;
   background: none;

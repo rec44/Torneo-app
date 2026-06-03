@@ -1,4 +1,4 @@
-.crear-torneo-page {
+﻿.crear-torneo-page {
   padding: 36px 32px 80px;
   background: var(--code-bg);
   min-height: calc(100vh - 72px);
@@ -74,7 +74,7 @@
 
 /* ─── Global error ─────────────────────────────────────────── */
 
-.form-error-general {
+.error-general-formulario {
   padding: 12px 16px;
   margin-bottom: 24px;
   background: rgba(239, 68, 68, 0.08);
@@ -91,13 +91,13 @@
 
 /* ─── Form sections ────────────────────────────────────────── */
 
-.crear-torneo-form {
+.crear-torneo-formulario {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.form-section {
+.seccion-formulario {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -106,7 +106,7 @@
   margin: 0;
 }
 
-.form-section-header {
+.seccion-formulario-cabecera {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -115,7 +115,7 @@
   background: var(--bg);
 }
 
-.form-section-num {
+.seccion-formulario-numero {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,14 +130,14 @@
   flex-shrink: 0;
 }
 
-.form-section-title {
+.seccion-formulario-titulo {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text-h);
   letter-spacing: 0.1px;
 }
 
-.form-section-body {
+.seccion-formulario-cuerpo {
   padding: 20px 22px;
   display: flex;
   flex-direction: column;
@@ -150,7 +150,7 @@
 
 /* ─── Fields ───────────────────────────────────────────────── */
 
-.form-row {
+.fila-formulario {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
@@ -160,19 +160,19 @@
   }
 }
 
-.form-field {
+.campo-formulario {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form-label {
+.etiqueta-formulario {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-h);
 }
 
-.form-required {
+.requerido {
   color: #dc2626;
   margin-left: 2px;
 
@@ -181,14 +181,14 @@
   }
 }
 
-.form-hint {
+.ayuda-formulario {
   font-size: 12px;
   font-weight: 400;
   color: var(--text);
 }
 
-.form-input,
-.form-select {
+.entrada-formulario,
+.selector-formulario {
   padding: 9px 12px;
   font-size: 15px;
   font-family: var(--sans);
@@ -212,7 +212,7 @@
   }
 }
 
-.form-select {
+.selector-formulario {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6375' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -232,7 +232,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-.form-input--error {
+.entrada-formulario--error {
   border-color: #dc2626;
 
   &:focus {
@@ -244,7 +244,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   }
 }
 
-.form-field-error {
+.error-campo-formulario {
   font-size: 13px;
   color: #dc2626;
   margin: 0;
@@ -256,14 +256,14 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* ─── Editar: readonly info ────────────────────────────────── */
 
-.editar-readonly-info {
+.editar-solo-lectura-info {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
-.editar-readonly-tag {
+.editar-solo-lectura-etiqueta {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
@@ -275,7 +275,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border: 1px solid var(--accent-border);
 }
 
-.editar-readonly-tag--formato {
+.editar-solo-lectura-etiqueta--formato {
   background: var(--code-bg);
   color: var(--text-h);
   border-color: var(--border);
@@ -283,7 +283,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
 
 /* ─── Actions ──────────────────────────────────────────────── */
 
-.form-actions {
+.acciones-formulario {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -311,7 +311,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   }
 }
 
-.btn-submit {
+.btn-enviar {
   display: inline-flex;
   align-items: center;
   padding: 9px 24px;

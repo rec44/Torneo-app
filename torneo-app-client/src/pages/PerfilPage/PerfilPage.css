@@ -1,4 +1,4 @@
-.perfil-page {
+﻿.perfil-page {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
@@ -13,7 +13,7 @@
 
 /* ─── Header ───────────────────────────────────────────────── */
 
-.perfil-header {
+.perfil-cabecera {
   display: flex;
   align-items: center;
   gap: 24px;
@@ -44,14 +44,14 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.perfil-header-info {
+.perfil-cabecera-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.perfil-header-badges {
+.perfil-cabecera-insignias {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -59,7 +59,7 @@
   flex-wrap: wrap;
 }
 
-.perfil-deporte-tag {
+.perfil-deporte-etiqueta {
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
@@ -90,7 +90,7 @@
 
 /* ─── Stats row ─────────────────────────────────────────────── */
 
-.perfil-stats-row {
+.perfil-estadisticas-row {
   display: flex;
   align-items: center;
   gap: 0;
@@ -105,7 +105,7 @@
   }
 }
 
-.perfil-stat {
+.perfil-estadistica {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -114,7 +114,7 @@
   padding: 4px 0;
 }
 
-.perfil-stat-valor {
+.perfil-estadistica-valor {
   font-size: 22px;
   font-weight: 700;
   color: var(--text-h);
@@ -122,7 +122,7 @@
   line-height: 1;
 }
 
-.perfil-stat-label {
+.perfil-estadistica-etiqueta {
   font-size: 12px;
   color: var(--text);
   text-align: center;
@@ -131,7 +131,7 @@
   letter-spacing: 0.4px;
 }
 
-.perfil-stat-divider {
+.perfil-estadistica-divisor {
   width: 1px;
   height: 36px;
   background: var(--border);
@@ -145,7 +145,7 @@
   text-align: left;
 }
 
-.perfil-seccion-header {
+.perfil-seccion-cabecera {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -161,7 +161,7 @@
   text-align: left;
 }
 
-.perfil-count {
+.perfil-contador {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -182,7 +182,7 @@
 
 /* ─── Scroll horizontal historial ──────────────────────────── */
 
-.perfil-scroll-h {
+.perfil-desplazamiento-h {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -197,8 +197,8 @@
   &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
   /* Cada card: ancho fijo para forzar el scroll */
-  > .torneo-card,
-  > .torneo-card--skeleton {
+  > .tarjeta-torneo,
+  > .tarjeta-torneo--esqueleto {
     flex: 0 0 270px;
     width: 270px;
     min-width: 270px;
@@ -228,7 +228,7 @@
 
 /* ─── ELO badge en el header ───────────────────────────────── */
 
-.perfil-elo-badge {
+.perfil-elo-insignia {
   display: inline-block;
   margin-top: 6px;
   padding: 2px 10px;
@@ -242,14 +242,14 @@
 
 /* ─── Tab ELO por deporte ──────────────────────────────────── */
 
-.perfil-elo-section {
+.perfil-elo-seccion {
   display: flex;
   flex-direction: column;
   gap: 16px;
   max-width: 480px;
 }
 
-.perfil-elo-global-card {
+.perfil-elo-global-tarjeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -259,14 +259,14 @@
   border-radius: 12px;
 }
 
-.perfil-elo-global-label {
+.perfil-elo-global-etiqueta {
   display: block;
   font-size: 14px;
   font-weight: 600;
   color: var(--accent);
 }
 
-.perfil-elo-global-desc {
+.perfil-elo-global-descripcion {
   display: block;
   font-size: 12px;
   color: var(--text);
@@ -314,7 +314,7 @@
 
 /* ─── Perfil público compartido ────────────────────────────── */
 
-.perfil-pub-page {
+.perfil-pub-pag {
   padding: 32px 32px 64px;
   max-width: 600px;
 
@@ -323,7 +323,7 @@
   }
 }
 
-.perfil-pub-header {
+.perfil-pub-cabecera {
   display: flex;
   align-items: center;
   gap: 18px;
@@ -356,7 +356,7 @@
   gap: 12px;
 }
 
-.perfil-pub-skeleton {
+.perfil-pub-esqueleto {
   display: flex;
   flex-direction: column;
   gap: 16px;

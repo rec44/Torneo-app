@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegistrarResultadoRequest;
 use App\Http\Requests\UpdatePartidoRequest;
+use App\Http\Resources\PartidoResource;
 use App\Mail\FechaPartidoActualizada;
 // use App\Mail\ResultadoRegistrado;
 // use App\Mail\TorneoFinalizado;
@@ -12,6 +13,7 @@ use App\Models\Partido;
 use App\Services\EloService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Mail;
 
 class PartidoController extends Controller
@@ -24,14 +26,14 @@ class PartidoController extends Controller
             'ganadorEquipo:id,nombre',
             'torneo:id,nombre'
         )
-            ->when($request->torneo_id, fn($q, $v) => $q->where('torneo_id', $v))
-            ->when($request->estado, fn($q, $v) => $q->where('estado', $v))
+            ->when($request->torneo_id, fn ($q, $v) => $q->where('torneo_id', $v))
+            ->when($request->estado,    fn ($q, $v) => $q->where('estado', $v))
             ->paginate(20);
 
-        return response()->json($partidos);
+        return PartidoResource::collection($partidos)->response();
     }
 
-    public function show(Partido $partido): JsonResponse
+    public function show(Partido $partido): JsonResponse|JsonResource
     {
         $partido->load(
             'equipo1:id,nombre',
@@ -40,12 +42,12 @@ class PartidoController extends Controller
             'torneo:id,nombre'
         );
 
-        return response()->json($partido);
+        return new PartidoResource($partido);
     }
 
-    public function update(UpdatePartidoRequest $request, Partido $partido): JsonResponse
+    public function update(UpdatePartidoRequest $request, Partido $partido): JsonResponse|JsonResource
     {
-        $user = $request->user();
+        $user          = $request->user();
         $esOrganizador = $user->id === $partido->torneo->creado_por || $user->rol === 'admin';
 
         if (! $esOrganizador) {
@@ -105,17 +107,16 @@ class PartidoController extends Controller
         $fechaAnterior = $partido->programado_en?->format('Y-m-d H:i');
         $partido->update($data);
 
-        // Notificar solo si la fecha realmente cambió, solo al capitán de cada equipo
         if (! empty($data['programado_en'])) {
-            $fresco       = $partido->fresh()->load('torneo', 'equipo1.capitan', 'equipo2.capitan');
-            $fechaNueva   = $fresco->programado_en?->format('Y-m-d H:i');
-            $fechaCambio  = $fechaNueva !== $fechaAnterior;
+            $fresco      = $partido->fresh()->load('torneo', 'equipo1.capitan', 'equipo2.capitan');
+            $fechaNueva  = $fresco->programado_en?->format('Y-m-d H:i');
+            $fechaCambio = $fechaNueva !== $fechaAnterior;
 
             if ($fechaCambio) {
-                $cap1  = $fresco->equipo1?->capitan;
-                $cap2  = $fresco->equipo2?->capitan;
-                $nom1  = $fresco->equipo1?->nombre ?? 'TBD';
-                $nom2  = $fresco->equipo2?->nombre ?? 'TBD';
+                $cap1 = $fresco->equipo1?->capitan;
+                $cap2 = $fresco->equipo2?->capitan;
+                $nom1 = $fresco->equipo1?->nombre ?? 'Por definir';
+                $nom2 = $fresco->equipo2?->nombre ?? 'Por definir';
                 if ($cap1) {
                     Mail::to($cap1->email)
                         ->later(now(), new FechaPartidoActualizada($fresco, $cap1->nombre, $nom1, $nom2));
@@ -127,7 +128,7 @@ class PartidoController extends Controller
             }
         }
 
-        return response()->json($partido->fresh());
+        return new PartidoResource($partido->fresh());
     }
 
     public function destroy(Request $request, Partido $partido): JsonResponse
@@ -141,7 +142,7 @@ class PartidoController extends Controller
         return response()->json(null, 204);
     }
 
-    public function registrarResultado(RegistrarResultadoRequest $request, Partido $partido): JsonResponse
+    public function registrarResultado(RegistrarResultadoRequest $request, Partido $partido): JsonResponse|JsonResource
     {
         $user   = $request->user();
         $torneo = $partido->torneo()->first();
@@ -184,33 +185,26 @@ class PartidoController extends Controller
             $eloService->actualizarPorPartido($fresco);
         }
 
-        // Email de resultado — pendiente de activar
-        // $historial = $fresco->historialElo()->get()->keyBy('usuario_id');
-        // foreach ([$fresco->equipo1, $fresco->equipo2] as $equipo) {
-        //     if (! $equipo) continue;
-        //     foreach ($equipo->miembros as $miembro) {
-        //         $delta = $historial[$miembro->id]->delta ?? 0;
-        //         Mail::to($miembro->email)->queue(
-        //             new ResultadoRegistrado($fresco->load('torneo', 'equipo1', 'equipo2', 'ganadorEquipo'), $miembro->nombre, $delta)
-        //         );
-        //     }
-        // }
-
-        // Finalizar el torneo automáticamente si ya no quedan partidos pendientes
         $hayPendientes = Partido::where('torneo_id', $torneo->id)
             ->where('estado', '!=', 'finalizado')
             ->exists();
 
         if (! $hayPendientes) {
             $torneo->update(['estado' => 'finalizado']);
-
-            // Email de torneo finalizado — pendiente de activar
-            // foreach ($participantes as $u) {
-            //     Mail::to($u->email)->queue(new TorneoFinalizado($torneo, $u->nombre, $campeon));
-            // }
         }
 
-        return response()->json(
+        // $frescoCargado = $fresco->load('torneo', 'equipo1.equipo_usuarios.usuario', 'equipo2.equipo_usuarios.usuario');
+        // $historial     = $frescoCargado->historialElo->keyBy('usuario_id');
+        // foreach ([$frescoCargado->equipo1, $frescoCargado->equipo2] as $i => $equipo) {
+        //     foreach ($equipo?->equipo_usuarios ?? [] as $j => $pivot) {
+        //         $usuario = $pivot->usuario;
+        //         $delta   = $historial->get($usuario->id)?->delta ?? 0;
+        //         Mail::to($usuario->email)
+        //             ->later(now()->addSeconds(($i * 10) + ($j * 3)), new ResultadoRegistrado($frescoCargado, $usuario->nombre, $delta));
+        //     }
+        // }
+
+        return new PartidoResource(
             $partido->load('equipo1:id,nombre', 'equipo2:id,nombre', 'ganadorEquipo:id,nombre')
         );
     }
@@ -218,7 +212,7 @@ class PartidoController extends Controller
     private function procesarAvanceBracket(Partido $partido): void
     {
         [$siguiente, $esEquipo1] = $this->siguienteEnBracket($partido);
-        if (!$siguiente) return;
+        if (! $siguiente) return;
 
         $nuevoGanador = (int) $partido->ganador_equipo_id;
         $slotActual   = (int) ($esEquipo1 ? $siguiente->equipo1_id : $siguiente->equipo2_id);
@@ -243,7 +237,7 @@ class PartidoController extends Controller
     private function limpiarCascada(Partido $partido): void
     {
         [$siguiente, $esEquipo1] = $this->siguienteEnBracket($partido);
-        if (!$siguiente) return;
+        if (! $siguiente) return;
 
         $update = $esEquipo1
             ? ['equipo1_id' => null]

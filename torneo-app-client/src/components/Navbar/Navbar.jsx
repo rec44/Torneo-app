@@ -1,6 +1,6 @@
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+﻿import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../../hooks/useAuth'
 import './Navbar.css'
 
 export function Navbar() {
@@ -33,11 +33,11 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="navbar">
+      <nav className="barra-nav">
 
         {/* Hamburguesa — solo móvil */}
         <button
-          className="navbar-hamburguesa"
+          className="barra-nav-hamburguesa"
           onClick={() => setMenuAbierto(v => !v)}
           aria-label="Menú"
           aria-expanded={menuAbierto}
@@ -54,8 +54,8 @@ export function Navbar() {
         </button>
 
         {/* Brand — centrado en móvil, izquierda en desktop */}
-        <NavLink to="/torneos" className="navbar-brand" onClick={cerrarMenu}>
-          <svg className="navbar-brand-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <NavLink to="/torneos" className="barra-nav-marca" onClick={cerrarMenu}>
+          <svg className="barra-nav-marca-icono" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 2h10v7a5 5 0 0 1-10 0V2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
             <path d="M2 5h3M18 5h-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
             <path d="M10 14v3M7 17h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -63,44 +63,44 @@ export function Navbar() {
           RiseCup
         </NavLink>
 
-        <div className="navbar-divider" />
+        <div className="barra-nav-divisor" />
 
         {/* Links — ocultos en móvil, en el dropdown */}
-        <div className="navbar-links">
-          <NavLink to="/torneos" className={({ isActive }) => 'navbar-link' + (isActive ? ' navbar-link--active' : '')} end>
+        <div className="barra-nav-enlaces">
+          <NavLink to="/torneos" className={({ isActive }) => 'barra-nav-enlace' + (isActive ? ' barra-nav-enlace--activo' : '')} end>
             Torneos
           </NavLink>
           {user && (
-            <NavLink to="/mis-torneos" className={({ isActive }) => 'navbar-link' + (isActive ? ' navbar-link--active' : '')}>
+            <NavLink to="/mis-torneos" className={({ isActive }) => 'barra-nav-enlace' + (isActive ? ' barra-nav-enlace--activo' : '')}>
               Mis torneos
             </NavLink>
           )}
           {user && (
-            <NavLink to={`/usuarios/${user.id}`} className={({ isActive }) => 'navbar-link' + (isActive ? ' navbar-link--active' : '')}>
+            <NavLink to={`/usuarios/${user.id}`} className={({ isActive }) => 'barra-nav-enlace' + (isActive ? ' barra-nav-enlace--activo' : '')}>
               Perfil
             </NavLink>
           )}
         </div>
 
         {/* User section */}
-        <div className="navbar-user">
+        <div className="barra-nav-usuario">
           {user ? (
             <>
               {user.rol === 'admin' && (
-                <button className="navbar-btn-admin" onClick={abrirPanelAdmin}>
+                <button className="barra-nav-btn-admin" onClick={abrirPanelAdmin}>
                   Admin
                 </button>
               )}
-              <div className="navbar-user-info">
-                <span className="navbar-avatar">{user.nombre?.[0]?.toUpperCase()}</span>
-                <span className="navbar-username">{user.nombre}</span>
+              <div className="barra-nav-info-usuario">
+                <span className="barra-nav-avatar">{user.nombre?.[0]?.toUpperCase()}</span>
+                <span className="barra-nav-nombre-usuario">{user.nombre}</span>
               </div>
-              <button className="navbar-btn-logout" onClick={handleLogout}>Salir</button>
+              <button className="barra-nav-btn-salir" onClick={handleLogout}>Salir</button>
             </>
           ) : (
             <>
-              <Link to="/login"    className="navbar-btn-ghost">Iniciar sesión</Link>
-              <Link to="/register" className="navbar-btn-accent">Registrarse</Link>
+              <Link to="/login"    className="barra-nav-btn-fantasma">Iniciar sesión</Link>
+              <Link to="/register" className="barra-nav-btn-acento">Registrarse</Link>
             </>
           )}
         </div>
@@ -109,19 +109,19 @@ export function Navbar() {
 
       {/* Dropdown móvil */}
       {menuAbierto && (
-        <div className="navbar-mobile-menu">
-          <NavLink to="/torneos" className="mobile-link" onClick={cerrarMenu} end>Torneos</NavLink>
-          {user && <NavLink to="/mis-torneos" className="mobile-link" onClick={cerrarMenu}>Mis torneos</NavLink>}
-          {user && <NavLink to={`/usuarios/${user.id}`} className="mobile-link" onClick={cerrarMenu}>Perfil</NavLink>}
-          {!user && <Link to="/login"    className="mobile-link" onClick={cerrarMenu}>Iniciar sesión</Link>}
-          {!user && <Link to="/register" className="mobile-link mobile-link--accent" onClick={cerrarMenu}>Registrarse</Link>}
+        <div className="barra-nav-menu-movil">
+          <NavLink to="/torneos" className="movil-enlace" onClick={cerrarMenu} end>Torneos</NavLink>
+          {user && <NavLink to="/mis-torneos" className="movil-enlace" onClick={cerrarMenu}>Mis torneos</NavLink>}
+          {user && <NavLink to={`/usuarios/${user.id}`} className="movil-enlace" onClick={cerrarMenu}>Perfil</NavLink>}
+          {!user && <Link to="/login"    className="movil-enlace" onClick={cerrarMenu}>Iniciar sesión</Link>}
+          {!user && <Link to="/register" className="movil-enlace movil-enlace--acento" onClick={cerrarMenu}>Registrarse</Link>}
           {user?.rol === 'admin' && (
-            <button className="mobile-link" onClick={() => { abrirPanelAdmin(); cerrarMenu() }}>
+            <button className="movil-enlace" onClick={() => { abrirPanelAdmin(); cerrarMenu() }}>
               Panel admin
             </button>
           )}
           {user && (
-            <button className="mobile-link mobile-link--salir" onClick={handleLogout}>
+            <button className="movil-enlace movil-enlace--salir" onClick={handleLogout}>
               Cerrar sesión
             </button>
           )}
