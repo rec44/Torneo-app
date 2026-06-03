@@ -41,7 +41,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $url = config('app.frontend_url') ?: 'http://localhost:5173';
+        $url = (config('app.frontend_url') ?: 'http://localhost:5173') . '/login';
 
         return redirect()->away($url);
     }

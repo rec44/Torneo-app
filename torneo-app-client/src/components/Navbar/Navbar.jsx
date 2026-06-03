@@ -22,7 +22,7 @@ export function Navbar() {
     const token = localStorage.getItem('token') ?? ''
     const form = document.createElement('form')
     form.method = 'POST'
-    form.action = 'http://localhost:8000/admin/auth'
+    form.action = '/admin/auth'
     const input = document.createElement('input')
     input.type = 'hidden'
     input.name = 'token'
