@@ -27,3 +27,5 @@ COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 WORKDIR /var/www/html
 
 EXPOSE 80
+
+CMD bash -c "php artisan storage:link --force 2>/dev/null || true && chown -R www-data:www-data storage bootstrap/cache && apache2-foreground"
