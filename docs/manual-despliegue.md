@@ -1,5 +1,15 @@
 # Manual de Despliegue — RiseCup
 
+## Acceso a la máquina virtual
+
+| Campo | Valor |
+|---|---|
+| Usuario | `sergio` |
+| Contraseña | `sergio123` |
+| Proyecto | `~/risecup` |
+
+---
+
 ## Requisitos previos
 
 - Ubuntu Server (o cualquier distro con apt)
