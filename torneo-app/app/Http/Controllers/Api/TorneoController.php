@@ -141,6 +141,14 @@ class TorneoController extends Controller
             $equipo->update(['semilla' => $index + 1]);
         });
 
+        // Resnapshotar el ELO de cada participante con su valor actual al arrancar el torneo
+        $confirmados->load('miembros');
+        foreach ($confirmados as $equipo) {
+            foreach ($equipo->miembros as $miembro) {
+                $equipo->miembros()->updateExistingPivot($miembro->id, ['elo_al_unirse' => $miembro->elo]);
+            }
+        }
+
         $torneo->update(['estado' => 'programacion']);
 
         if ($torneo->formato === 'eliminacion_simple') {

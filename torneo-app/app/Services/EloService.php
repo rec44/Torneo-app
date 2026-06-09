@@ -76,8 +76,17 @@ class EloService
 
         if ($miembros1->isEmpty() || $miembros2->isEmpty()) return $null;
 
-        $eloTeam1 = $miembros1->avg(fn($m) => $m->pivot->elo_al_unirse);
-        $eloTeam2 = $miembros2->avg(fn($m) => $m->pivot->elo_al_unirse);
+        $deporteId = DB::table('torneos')->where('id', $partido->torneo_id)->value('deporte_id');
+
+        // ELO específico del deporte para cada participante (500 si nunca ha jugado ese deporte)
+        $todosIds = $miembros1->pluck('id')->merge($miembros2->pluck('id'));
+        $elosPorDeporte = DB::table('elo_usuario_deporte')
+            ->where('deporte_id', $deporteId)
+            ->whereIn('usuario_id', $todosIds)
+            ->pluck('elo', 'usuario_id');
+
+        $eloTeam1 = $miembros1->avg(fn($m) => $elosPorDeporte[$m->id] ?? 500);
+        $eloTeam2 = $miembros2->avg(fn($m) => $elosPorDeporte[$m->id] ?? 500);
 
         $mediaEloTorneo = $this->mediaEloTorneo($partido->torneo_id);
         $maxRonda       = Partido::where('torneo_id', $partido->torneo_id)->max('ronda') ?? 1;
@@ -86,7 +95,7 @@ class EloService
         $e1 = 1 / (1 + pow(10, ($eloTeam2 - $eloTeam1) / 400));
         $e2 = 1 - $e1;
 
-        $resultado1 = $partido->ganador_equipo_id === $equipo1->id ? 1.0 : 0.0;
+        $resultado1 = (int) $partido->ganador_equipo_id === (int) $equipo1->id ? 1.0 : 0.0;
         $resultado2 = 1.0 - $resultado1;
 
         $esGanador1 = $resultado1 === 1.0;
@@ -118,8 +127,6 @@ class EloService
         $delta2 = $resultado2 === 1.0
             ? min(max($raw2, 7), 30) + ($esUpset2 ? $bonusUpset : 0)
             : max(min($raw2, -$minPerdida), -30) - ($esUpset1 ? $bonusUpset : 0);
-
-        $deporteId = DB::table('torneos')->where('id', $partido->torneo_id)->value('deporte_id');
 
         return [$delta1, $delta2, $miembros1, $miembros2, $deporteId];
     }
@@ -186,9 +193,13 @@ class EloService
 
     private function mediaEloTorneo(int $torneoId): float
     {
-        return (float) DB::table('equipo_usuarios')
+        $deporteId = DB::table('torneos')->where('id', $torneoId)->value('deporte_id');
+
+        return (float) (DB::table('elo_usuario_deporte')
+            ->join('equipo_usuarios', 'elo_usuario_deporte.usuario_id', '=', 'equipo_usuarios.usuario_id')
             ->join('equipos', 'equipo_usuarios.equipo_id', '=', 'equipos.id')
             ->where('equipos.torneo_id', $torneoId)
-            ->avg('equipo_usuarios.elo_al_unirse') ?? 1000.0;
+            ->where('elo_usuario_deporte.deporte_id', $deporteId)
+            ->avg('elo_usuario_deporte.elo') ?? 1000.0);
     }
 }
